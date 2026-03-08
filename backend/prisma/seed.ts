@@ -174,8 +174,15 @@ async function seedUsers(
     const key = u.email.split('@')[0];
     users[key] = await prisma.user.upsert({
       where: { email: u.email },
-      update: { firstName: u.firstName, lastName: u.lastName, roleId: u.roleId, teamId: u.teamId },
-      create: { ...u, passwordHash: password },
+      update: {
+        firstName: u.firstName,
+        lastName: u.lastName,
+        roleId: u.roleId,
+        teamId: u.teamId,
+        passwordHash: password,
+        isActive: true,
+      },
+      create: { ...u, passwordHash: password, isActive: true },
     });
   }
 
