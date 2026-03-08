@@ -3,9 +3,8 @@
 // -------------------------------------------------------
 
 generator client {
-  provider        = "prisma-client-js"
-  output          = "../node_modules/.prisma/client"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -54,8 +53,9 @@ model User {
   teamId String? @map("team_id")
   team   Team?   @relation(fields: [teamId], references: [id])
 
-  // Relations
   agents          Agent[]
+  closerNiches    CloserNiche[]
+  closedProposals Proposal[]     @relation("ProposalCloser")
   scriptsCreated  Script[]       @relation("ScriptCreator")
   closedMeetings  Meeting[]      @relation("MeetingCloser")
   assignedTasks   Task[]         @relation("TaskAssignee")
@@ -82,6 +82,40 @@ model RefreshToken {
 
   @@index([token], map: "idx_refresh_tokens_token")
   @@map("refresh_tokens")
+}
+
+// -------------------------------------------------------
+// Niches (Project Categories)
+// -------------------------------------------------------
+
+model Niche {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  isActive    Boolean @default(true) @map("is_active")
+
+  closers   CloserNiche[]
+  proposals Proposal[]
+  scripts   Script[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("niches")
+}
+
+model CloserNiche {
+  id      String @id @default(uuid())
+  userId  String @map("user_id")
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nicheId String @map("niche_id")
+  niche   Niche  @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, nicheId])
+  @@map("closer_niches")
 }
 
 // -------------------------------------------------------
@@ -173,6 +207,9 @@ model Script {
   createdById String @map("created_by_id")
   createdBy   User   @relation("ScriptCreator", fields: [createdById], references: [id])
 
+  nicheId String? @map("niche_id")
+  niche   Niche?  @relation(fields: [nicheId], references: [id])
+
   versions ScriptVersion[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -220,15 +257,21 @@ model Proposal {
   scriptVersionId String?        @map("script_version_id")
   scriptVersion   ScriptVersion? @relation(fields: [scriptVersionId], references: [id])
 
+  nicheId   String? @map("niche_id")
+  niche     Niche?  @relation(fields: [nicheId], references: [id])
+  closerId  String? @map("closer_id")
+  closer    User?   @relation("ProposalCloser", fields: [closerId], references: [id])
+  claimedAt DateTime? @map("claimed_at")
+
   jobTitle    String?        @map("job_title")
   jobUrl      String?        @map("job_url")
   coverLetter String?        @map("cover_letter")
   bidAmount   Float?         @map("bid_amount")
+  notes       String?
   status      ProposalStatus @default(DRAFT)
   sentAt      DateTime?      @map("sent_at")
   replyAt     DateTime?      @map("reply_at")
 
-  // Relations
   videoProposal VideoProposal?
   meeting       Meeting?
   deal          Deal?
@@ -240,6 +283,8 @@ model Proposal {
   @@index([agentId], map: "idx_proposals_agent")
   @@index([status], map: "idx_proposals_status")
   @@index([clientId], map: "idx_proposals_client")
+  @@index([nicheId], map: "idx_proposals_niche")
+  @@index([closerId], map: "idx_proposals_closer")
   @@map("proposals")
 }
 
