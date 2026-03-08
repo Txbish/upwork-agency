@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { AccountsModule } from './modules/accounts/accounts.module';
 import { ClientsModule } from './modules/clients/clients.module';
+import { NichesModule } from './modules/niches/niches.module';
 import { ProposalsModule } from './modules/proposals/proposals.module';
 import { ScriptsModule } from './modules/scripts/scripts.module';
 import { VideoModule } from './modules/video/video.module';
@@ -18,7 +19,7 @@ import { QAModule } from './modules/qa/qa.module';
 import { EventsModule } from './modules/events/events.module';
 import { ExperimentsModule } from './modules/experiments/experiments.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { JwtAuthGuard } from './common/guards';
+import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { JwtAuthGuard } from './common/guards';
     IdentityModule,
     AccountsModule,
     ClientsModule,
+    NichesModule,
     ProposalsModule,
     ScriptsModule,
     VideoModule,
@@ -55,10 +57,8 @@ import { JwtAuthGuard } from './common/guards';
     AnalyticsModule,
   ],
   providers: [
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

@@ -4,15 +4,20 @@ import { ProposalStatus } from '@prisma/client';
 import { PaginationDto } from '@/common/dto';
 
 export class FindProposalsDto extends PaginationDto {
-  @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsUUID()
   agentId?: string;
 
-  @ApiPropertyOptional({ example: '550e8400-e29b-41d4-a716-446655440001' })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsUUID()
   clientId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  nicheId?: string;
 
   @ApiPropertyOptional({ enum: ProposalStatus })
   @IsOptional()
