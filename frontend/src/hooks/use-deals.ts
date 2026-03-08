@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { Deal, PaginatedResponse } from '@/types';
 
@@ -7,6 +8,11 @@ interface FindDealsParams {
   page?: number;
   limit?: number;
   status?: string;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useDeals(params: FindDealsParams = {}) {
@@ -54,8 +60,8 @@ export function useCreateDeal() {
       qc.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal created');
     },
-    onError: () => {
-      toast.error('Failed to create deal');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create deal'));
     },
   });
 }
@@ -71,8 +77,8 @@ export function useUpdateDeal() {
       qc.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal updated');
     },
-    onError: () => {
-      toast.error('Failed to update deal');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to update deal'));
     },
   });
 }
@@ -84,12 +90,27 @@ export function useCloseDeal() {
       const res = await api.post(`/deals/${id}/close`, { status, notes });
       return res.data;
     },
+    onMutate: async ({ id, status }) => {
+      await qc.cancelQueries({ queryKey: ['deals'] });
+      const snapshots = qc.getQueriesData<PaginatedResponse<Deal>>({ queryKey: ['deals'] });
+      qc.setQueriesData<PaginatedResponse<Deal>>({ queryKey: ['deals'] }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.map((d) => (d.id === id ? { ...d, status: status as Deal['status'] } : d)),
+        };
+      });
+      return { snapshots };
+    },
+    onError: (error: unknown, _vars, ctx) => {
+      if (ctx?.snapshots) {
+        ctx.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+      }
+      toast.error(extractError(error, 'Failed to close deal'));
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal closed');
-    },
-    onError: () => {
-      toast.error('Failed to close deal');
     },
   });
 }

@@ -107,4 +107,12 @@ export class UsersService {
     const { passwordHash, ...result } = user;
     return result;
   }
+
+  async listRoles() {
+    return this.prisma.role.findMany({ orderBy: { name: 'asc' } });
+  }
+
+  async listTeams() {
+    return this.prisma.team.findMany({ orderBy: { name: 'asc' } });
+  }
 }

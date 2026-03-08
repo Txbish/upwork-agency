@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { Project, PaginatedResponse } from '@/types';
 
@@ -7,6 +8,11 @@ interface FindProjectsParams {
   page?: number;
   limit?: number;
   status?: string;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useProjects(params: FindProjectsParams = {}) {
@@ -44,8 +50,8 @@ export function useCreateProject() {
       qc.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Project created');
     },
-    onError: () => {
-      toast.error('Failed to create project');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create project'));
     },
   });
 }
@@ -61,8 +67,8 @@ export function useUpdateProject() {
       qc.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Project updated');
     },
-    onError: () => {
-      toast.error('Failed to update project');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to update project'));
     },
   });
 }
@@ -97,8 +103,8 @@ export function useCreateMilestone() {
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'milestones'] });
       toast.success('Milestone created');
     },
-    onError: () => {
-      toast.error('Failed to create milestone');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create milestone'));
     },
   });
 }
@@ -114,8 +120,8 @@ export function useCompleteMilestone() {
       qc.invalidateQueries({ queryKey: ['projects', projectId, 'milestones'] });
       toast.success('Milestone completed');
     },
-    onError: () => {
-      toast.error('Failed to complete milestone');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to complete milestone'));
     },
   });
 }

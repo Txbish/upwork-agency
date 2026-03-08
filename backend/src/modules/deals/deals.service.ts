@@ -11,7 +11,7 @@ export class DealsService {
   async create(dto: CreateDealDto): Promise<Deal> {
     return this.prisma.deal.create({
       data: dto,
-      include: { proposal: true },
+      include: { proposal: { include: { client: true } } },
     });
   }
 
@@ -27,7 +27,7 @@ export class DealsService {
         skip: pagination.skip,
         take: pagination.take,
         orderBy: { createdAt: 'desc' },
-        include: { proposal: true },
+        include: { proposal: { include: { client: true } } },
       }),
       this.prisma.deal.count({ where }),
     ]);
@@ -38,7 +38,7 @@ export class DealsService {
   async findById(id: string): Promise<Deal> {
     const deal = await this.prisma.deal.findUnique({
       where: { id },
-      include: { proposal: true, project: true },
+      include: { proposal: { include: { client: true } }, project: true },
     });
 
     if (!deal) {
@@ -54,11 +54,11 @@ export class DealsService {
     return this.prisma.deal.update({
       where: { id },
       data: dto,
-      include: { proposal: true },
+      include: { proposal: { include: { client: true } } },
     });
   }
 
-  async close(id: string, status: 'WON' | 'LOST'): Promise<Deal> {
+  async close(id: string, status: 'WON' | 'LOST' | 'CANCELLED'): Promise<Deal> {
     await this.findById(id);
 
     return this.prisma.deal.update({
@@ -67,14 +67,17 @@ export class DealsService {
         status,
         closedAt: new Date(),
       },
-      include: { proposal: true, project: true },
+      include: { proposal: { include: { client: true } }, project: true },
     });
   }
 
   async getStats(): Promise<{
     totalDeals: number;
     totalValue: number;
-    countByStatus: Record<DealStatus, number>;
+    negotiating: number;
+    won: number;
+    lost: number;
+    cancelled: number;
   }> {
     const [totalDeals, valueAgg, statusCounts] = await Promise.all([
       this.prisma.deal.count(),
@@ -101,8 +104,11 @@ export class DealsService {
 
     return {
       totalDeals,
-      totalValue: valueAgg._sum.value ?? 0,
-      countByStatus,
+      totalValue: Number(valueAgg._sum.value ?? 0),
+      negotiating: countByStatus.NEGOTIATING ?? 0,
+      won: countByStatus.WON ?? 0,
+      lost: countByStatus.LOST ?? 0,
+      cancelled: countByStatus.CANCELLED ?? 0,
     };
   }
 }

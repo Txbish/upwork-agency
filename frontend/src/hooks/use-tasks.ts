@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { Task, PaginatedResponse } from '@/types';
 
@@ -9,6 +10,11 @@ interface FindTasksParams {
   projectId?: string;
   assigneeId?: string;
   status?: string;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useTasks(params: FindTasksParams = {}) {
@@ -46,8 +52,8 @@ export function useCreateTask() {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       toast.success('Task created');
     },
-    onError: () => {
-      toast.error('Failed to create task');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create task'));
     },
   });
 }
@@ -63,8 +69,8 @@ export function useUpdateTask() {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       toast.success('Task updated');
     },
-    onError: () => {
-      toast.error('Failed to update task');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to update task'));
     },
   });
 }
@@ -80,8 +86,8 @@ export function useAssignTask() {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       toast.success('Task assigned');
     },
-    onError: () => {
-      toast.error('Failed to assign task');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to assign task'));
     },
   });
 }

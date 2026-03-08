@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useDeals, useCreateDeal, useCloseDeal, useDealStats } from '@/hooks/use-deals';
+import { useProposals } from '@/hooks/use-proposals';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +70,7 @@ export default function DealsPage() {
   const { data: stats } = useDealStats();
   const createDeal = useCreateDeal();
   const closeDeal = useCloseDeal();
+  const { data: proposalsData } = useProposals({ limit: 100 });
 
   const [createForm, setCreateForm] = useState({
     proposalId: '',
@@ -134,14 +136,23 @@ export default function DealsPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="dealProposalId">Proposal ID *</Label>
-                  <Input
-                    id="dealProposalId"
+                  <Label htmlFor="dealProposalId">Proposal *</Label>
+                  <Select
                     value={createForm.proposalId}
-                    onChange={(e) => setCreateForm((p) => ({ ...p, proposalId: e.target.value }))}
-                    placeholder="Paste proposal ID"
-                    required
-                  />
+                    onValueChange={(v) => setCreateForm((p) => ({ ...p, proposalId: v }))}
+                  >
+                    <SelectTrigger id="dealProposalId">
+                      <SelectValue placeholder="Select proposal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {proposalsData?.data.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.jobTitle || 'Untitled'}
+                          {p.client?.name ? ` — ${p.client.name}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">

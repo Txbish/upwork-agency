@@ -15,6 +15,7 @@ import {
   ScrollText,
   Layers,
   UserCircle,
+  ClipboardCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,7 +33,7 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     href: '/',
     icon: LayoutDashboard,
-    roles: ['admin', 'bidder', 'closer', 'developer', 'qa', 'scriptwriter', 'leadership'],
+    roles: ['admin', 'bidder', 'closer', 'developer', 'qa', 'script_writer', 'leadership'],
   },
   {
     label: 'Proposals',
@@ -56,7 +57,7 @@ const navItems: NavItem[] = [
     label: 'Scripts',
     href: '/scripts',
     icon: ScrollText,
-    roles: ['admin', 'bidder', 'scriptwriter', 'leadership'],
+    roles: ['admin', 'bidder', 'script_writer', 'leadership'],
   },
   {
     label: 'Video Proposals',
@@ -87,6 +88,12 @@ const navItems: NavItem[] = [
     href: '/tasks',
     icon: ListChecks,
     roles: ['admin', 'developer', 'qa'],
+  },
+  {
+    label: 'QA Reviews',
+    href: '/qa-reviews',
+    icon: ClipboardCheck,
+    roles: ['admin', 'qa', 'developer', 'leadership'],
   },
   {
     label: 'Analytics',

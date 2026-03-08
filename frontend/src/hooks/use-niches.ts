@@ -1,7 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { Niche } from '@/types';
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
+}
 
 export function useNiches(includeInactive = false) {
   return useQuery<Niche[]>({
@@ -48,8 +54,8 @@ export function useCreateNiche() {
       qc.invalidateQueries({ queryKey: ['niches'] });
       toast.success('Niche created');
     },
-    onError: () => {
-      toast.error('Failed to create niche');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create niche'));
     },
   });
 }
@@ -65,8 +71,8 @@ export function useUpdateNiche() {
       qc.invalidateQueries({ queryKey: ['niches'] });
       toast.success('Niche updated');
     },
-    onError: () => {
-      toast.error('Failed to update niche');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to update niche'));
     },
   });
 }
@@ -82,8 +88,8 @@ export function useAssignCloserToNiche() {
       qc.invalidateQueries({ queryKey: ['niches', nicheId, 'closers'] });
       toast.success('Closer assigned to niche');
     },
-    onError: () => {
-      toast.error('Failed to assign closer');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to assign closer'));
     },
   });
 }
@@ -99,8 +105,8 @@ export function useRemoveCloserFromNiche() {
       qc.invalidateQueries({ queryKey: ['niches', nicheId, 'closers'] });
       toast.success('Closer removed from niche');
     },
-    onError: () => {
-      toast.error('Failed to remove closer');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to remove closer'));
     },
   });
 }

@@ -1,11 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { User, PaginatedResponse } from '@/types';
 
 interface FindUsersParams {
   page?: number;
   limit?: number;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useUsers(params: FindUsersParams = {}) {
@@ -47,8 +53,8 @@ export function useCreateUser() {
       qc.invalidateQueries({ queryKey: ['users'] });
       toast.success('User created');
     },
-    onError: () => {
-      toast.error('Failed to create user');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create user'));
     },
   });
 }
@@ -64,8 +70,8 @@ export function useUpdateUser() {
       qc.invalidateQueries({ queryKey: ['users'] });
       toast.success('User updated');
     },
-    onError: () => {
-      toast.error('Failed to update user');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to update user'));
     },
   });
 }

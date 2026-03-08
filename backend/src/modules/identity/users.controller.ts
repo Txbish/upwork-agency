@@ -29,6 +29,20 @@ export class UsersController {
     return this.usersService.findAll(pagination);
   }
 
+  @Get('roles')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List all roles' })
+  async listRoles() {
+    return this.usersService.listRoles();
+  }
+
+  @Get('teams')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List all teams' })
+  async listTeams() {
+    return this.usersService.listTeams();
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get a user by ID' })

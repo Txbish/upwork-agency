@@ -2,12 +2,20 @@
 
 import { useState } from 'react';
 import { useProjects, useCreateProject } from '@/hooks/use-projects';
+import { useDeals } from '@/hooks/use-deals';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +53,7 @@ export default function ProjectsPage() {
 
   const { data, isLoading, isError, error } = useProjects({ page, limit });
   const createProject = useCreateProject();
+  const { data: dealsData } = useDeals({ status: 'WON', limit: 100 });
 
   const [form, setForm] = useState({
     dealId: '',
@@ -87,14 +96,22 @@ export default function ProjectsPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="projDealId">Deal ID *</Label>
-                  <Input
-                    id="projDealId"
+                  <Label htmlFor="projDealId">Deal (WON) *</Label>
+                  <Select
                     value={form.dealId}
-                    onChange={(e) => setForm((p) => ({ ...p, dealId: e.target.value }))}
-                    placeholder="Paste deal ID"
-                    required
-                  />
+                    onValueChange={(v) => setForm((p) => ({ ...p, dealId: v }))}
+                  >
+                    <SelectTrigger id="projDealId">
+                      <SelectValue placeholder="Select won deal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {dealsData?.data.map((deal) => (
+                        <SelectItem key={deal.id} value={deal.id}>
+                          {deal.proposal?.jobTitle || 'Untitled'} — ${deal.value.toLocaleString()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="projName">Project Name</Label>

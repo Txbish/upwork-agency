@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useMeetings, useCreateMeeting, useCompleteMeeting } from '@/hooks/use-meetings';
+import { useProposals } from '@/hooks/use-proposals';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +70,7 @@ export default function MeetingsPage() {
 
   const createMeeting = useCreateMeeting();
   const completeMeeting = useCompleteMeeting();
+  const { data: proposalsData } = useProposals({ limit: 100 });
 
   const [createForm, setCreateForm] = useState({
     proposalId: '',
@@ -130,14 +132,23 @@ export default function MeetingsPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="proposalId">Proposal ID *</Label>
-                  <Input
-                    id="proposalId"
+                  <Label htmlFor="proposalId">Proposal *</Label>
+                  <Select
                     value={createForm.proposalId}
-                    onChange={(e) => setCreateForm((p) => ({ ...p, proposalId: e.target.value }))}
-                    placeholder="Paste proposal ID"
-                    required
-                  />
+                    onValueChange={(v) => setCreateForm((p) => ({ ...p, proposalId: v }))}
+                  >
+                    <SelectTrigger id="proposalId">
+                      <SelectValue placeholder="Select proposal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {proposalsData?.data.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.jobTitle || 'Untitled'}
+                          {p.client?.name ? ` — ${p.client.name}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="scheduledAt">Scheduled At *</Label>

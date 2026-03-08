@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useTasks, useCreateTask, useUpdateTask, useAssignTask } from '@/hooks/use-tasks';
+import { useTasks, useCreateTask, useUpdateTask } from '@/hooks/use-tasks';
+import { useProjects } from '@/hooks/use-projects';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,6 +73,7 @@ export default function TasksPage() {
 
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const { data: projectsData } = useProjects({ limit: 100 });
 
   const [form, setForm] = useState({
     projectId: '',
@@ -130,14 +132,22 @@ export default function TasksPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="taskProjectId">Project ID *</Label>
-                  <Input
-                    id="taskProjectId"
+                  <Label htmlFor="taskProjectId">Project *</Label>
+                  <Select
                     value={form.projectId}
-                    onChange={(e) => setForm((p) => ({ ...p, projectId: e.target.value }))}
-                    placeholder="Paste project ID"
-                    required
-                  />
+                    onValueChange={(v) => setForm((p) => ({ ...p, projectId: v }))}
+                  >
+                    <SelectTrigger id="taskProjectId">
+                      <SelectValue placeholder="Select project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectsData?.data.map((proj) => (
+                        <SelectItem key={proj.id} value={proj.id}>
+                          {proj.name || proj.deal?.proposal?.jobTitle || 'Untitled'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="taskTitle">Title *</Label>

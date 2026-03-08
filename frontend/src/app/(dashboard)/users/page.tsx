@@ -2,12 +2,21 @@
 
 import { useState } from 'react';
 import { useUsers, useCreateUser } from '@/hooks/use-users';
+import { useRoles } from '@/hooks/use-roles';
+import { useTeams } from '@/hooks/use-teams';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +43,8 @@ export default function UsersPage() {
 
   const { data, isLoading, isError, error } = useUsers({ page, limit });
   const createUser = useCreateUser();
+  const { data: roles } = useRoles();
+  const { data: teams } = useTeams();
 
   const [form, setForm] = useState({
     email: '',
@@ -52,7 +63,7 @@ export default function UsersPage() {
       firstName: form.firstName || undefined,
       lastName: form.lastName || undefined,
       roleId: form.roleId,
-      teamId: form.teamId || undefined,
+      teamId: form.teamId && form.teamId !== 'none' ? form.teamId : undefined,
     });
     setForm({ email: '', password: '', firstName: '', lastName: '', roleId: '', teamId: '' });
     setCreateOpen(false);
@@ -121,29 +132,48 @@ export default function UsersPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="userRoleId">Role ID</Label>
-                    <Input
-                      id="userRoleId"
+                    <Label htmlFor="userRoleId">Role *</Label>
+                    <Select
                       value={form.roleId}
-                      onChange={(e) => setForm((p) => ({ ...p, roleId: e.target.value }))}
-                      placeholder="Role UUID"
-                    />
+                      onValueChange={(v) => setForm((p) => ({ ...p, roleId: v }))}
+                    >
+                      <SelectTrigger id="userRoleId">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles?.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name.replace(/_/g, ' ')}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="userTeamId">Team ID</Label>
-                    <Input
-                      id="userTeamId"
+                    <Label htmlFor="userTeamId">Team</Label>
+                    <Select
                       value={form.teamId}
-                      onChange={(e) => setForm((p) => ({ ...p, teamId: e.target.value }))}
-                      placeholder="Team UUID"
-                    />
+                      onValueChange={(v) => setForm((p) => ({ ...p, teamId: v }))}
+                    >
+                      <SelectTrigger id="userTeamId">
+                        <SelectValue placeholder="Select team" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Team</SelectItem>
+                        {teams?.map((team) => (
+                          <SelectItem key={team.id} value={team.id}>
+                            {team.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
               <DialogFooter>
                 <Button
                   type="submit"
-                  disabled={createUser.isPending || !form.email || !form.password}
+                  disabled={createUser.isPending || !form.email || !form.password || !form.roleId}
                 >
                   {createUser.isPending ? 'Creating...' : 'Create User'}
                 </Button>

@@ -11,6 +11,7 @@ export class MeetingsService {
   async create(dto: CreateMeetingDto): Promise<Meeting> {
     return this.prisma.meeting.create({
       data: dto,
+      include: { proposal: { include: { client: true } } },
     });
   }
 
@@ -32,7 +33,7 @@ export class MeetingsService {
         where,
         skip: pagination.skip,
         take: pagination.take,
-        include: { proposal: true },
+        include: { proposal: { include: { client: true } } },
         orderBy: { scheduledAt: 'desc' },
       }),
       this.prisma.meeting.count({ where }),
@@ -44,7 +45,7 @@ export class MeetingsService {
   async findById(id: string): Promise<Meeting> {
     const meeting = await this.prisma.meeting.findUnique({
       where: { id },
-      include: { proposal: true, closer: true },
+      include: { proposal: { include: { client: true } }, closer: true },
     });
 
     if (!meeting) {
@@ -60,6 +61,7 @@ export class MeetingsService {
     return this.prisma.meeting.update({
       where: { id },
       data: dto,
+      include: { proposal: { include: { client: true } } },
     });
   }
 
@@ -74,6 +76,7 @@ export class MeetingsService {
         duration: dto.duration,
         notes: dto.notes,
       },
+      include: { proposal: { include: { client: true } } },
     });
   }
 }

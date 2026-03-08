@@ -1,11 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { Script, PaginatedResponse } from '@/types';
 
 interface FindScriptsParams {
   page?: number;
   limit?: number;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useScripts(params: FindScriptsParams = {}) {
@@ -45,8 +51,8 @@ export function useCreateScript() {
       qc.invalidateQueries({ queryKey: ['scripts'] });
       toast.success('Script created');
     },
-    onError: () => {
-      toast.error('Failed to create script');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create script'));
     },
   });
 }
@@ -63,8 +69,8 @@ export function useCreateScriptVersion() {
       qc.invalidateQueries({ queryKey: ['scripts'] });
       toast.success('Script version created');
     },
-    onError: () => {
-      toast.error('Failed to create script version');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create script version'));
     },
   });
 }

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import type { Meeting, PaginatedResponse } from '@/types';
 
@@ -8,6 +9,11 @@ interface FindMeetingsParams {
   limit?: number;
   closerId?: string;
   status?: string;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useMeetings(params: FindMeetingsParams = {}) {
@@ -45,8 +51,8 @@ export function useCreateMeeting() {
       qc.invalidateQueries({ queryKey: ['meetings'] });
       toast.success('Meeting scheduled');
     },
-    onError: () => {
-      toast.error('Failed to schedule meeting');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to schedule meeting'));
     },
   });
 }
@@ -62,8 +68,8 @@ export function useUpdateMeeting() {
       qc.invalidateQueries({ queryKey: ['meetings'] });
       toast.success('Meeting updated');
     },
-    onError: () => {
-      toast.error('Failed to update meeting');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to update meeting'));
     },
   });
 }
@@ -75,12 +81,29 @@ export function useCompleteMeeting() {
       const res = await api.post(`/meetings/${id}/complete`, data);
       return res.data;
     },
+    onMutate: async ({ id }) => {
+      await qc.cancelQueries({ queryKey: ['meetings'] });
+      const snapshots = qc.getQueriesData<PaginatedResponse<Meeting>>({ queryKey: ['meetings'] });
+      qc.setQueriesData<PaginatedResponse<Meeting>>({ queryKey: ['meetings'] }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.map((m) =>
+            m.id === id ? { ...m, status: 'COMPLETED' as Meeting['status'] } : m,
+          ),
+        };
+      });
+      return { snapshots };
+    },
+    onError: (error: unknown, _vars, ctx) => {
+      if (ctx?.snapshots) {
+        ctx.snapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+      }
+      toast.error(extractError(error, 'Failed to complete meeting'));
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meetings'] });
       toast.success('Meeting completed');
-    },
-    onError: () => {
-      toast.error('Failed to complete meeting');
     },
   });
 }

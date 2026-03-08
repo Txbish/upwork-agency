@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AxiosError } from 'axios';
 import api from '@/lib/api';
 import { VideoProposal, PaginatedResponse } from '@/types';
 
@@ -11,6 +12,11 @@ interface CreateVideoProposalInput {
   fileSize?: number;
   mimeType?: string;
   thumbnailUrl?: string;
+}
+
+function extractError(error: unknown, fallback: string): string {
+  const msg = (error as AxiosError<{ message: string | string[] }>)?.response?.data?.message;
+  return Array.isArray(msg) ? msg[0] : msg || fallback;
 }
 
 export function useVideoProposals(page = 1, limit = 20) {
@@ -56,8 +62,8 @@ export function useCreateVideoProposal() {
       qc.invalidateQueries({ queryKey: ['videos'] });
       toast.success('Video proposal created');
     },
-    onError: () => {
-      toast.error('Failed to create video proposal');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to create video proposal'));
     },
   });
 }
@@ -71,8 +77,8 @@ export function useGetUploadUrl() {
     onSuccess: () => {
       toast.success('Upload URL generated');
     },
-    onError: () => {
-      toast.error('Failed to generate upload URL');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to generate upload URL'));
     },
   });
 }
@@ -102,8 +108,8 @@ export function useDeleteVideoProposal() {
       qc.invalidateQueries({ queryKey: ['videos'] });
       toast.success('Video proposal deleted');
     },
-    onError: () => {
-      toast.error('Failed to delete video proposal');
+    onError: (error: unknown) => {
+      toast.error(extractError(error, 'Failed to delete video proposal'));
     },
   });
 }
