@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'aop_token';
+const REFRESH_TOKEN_KEY = 'aop_refresh_token';
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -13,6 +14,17 @@ export function setToken(token: string): void {
 export function removeToken(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+export function getRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function setRefreshToken(token: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(REFRESH_TOKEN_KEY, token);
 }
 
 export function isAuthenticated(): boolean {

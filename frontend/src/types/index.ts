@@ -146,6 +146,8 @@ export interface Script {
   id: string;
   name: string;
   category?: string;
+  nicheId?: string;
+  niche?: Niche;
   createdById: string;
   createdBy?: User;
   versions?: ScriptVersion[];
@@ -171,6 +173,12 @@ export interface Proposal {
   client?: Client;
   scriptVersionId?: string;
   scriptVersion?: ScriptVersion;
+  nicheId?: string;
+  niche?: Niche;
+  closerId?: string;
+  closer?: User;
+  claimedAt?: string;
+  notes?: string;
   jobTitle?: string;
   jobUrl?: string;
   coverLetter?: string;
@@ -335,6 +343,26 @@ export interface ExperimentAssignment {
   proposal?: Proposal;
   variant: string;
   assignedAt: string;
+  createdAt: string;
+}
+
+// ─── Niches ────────────────────────────────────────────────────────────────────
+
+export interface Niche {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CloserNiche {
+  userId: string;
+  nicheId: string;
+  user?: User;
+  niche?: Niche;
   createdAt: string;
 }
 
