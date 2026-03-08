@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -20,7 +20,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: { role: true },
+      include: { role: true, team: true },
     });
 
     if (!user) {
@@ -48,7 +48,7 @@ export class AuthService {
   async refreshToken(token: string) {
     const storedToken = await this.prisma.refreshToken.findUnique({
       where: { token },
-      include: { user: { include: { role: true } } },
+      include: { user: { include: { role: true, team: true } } },
     });
 
     if (!storedToken) {
@@ -63,7 +63,6 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token has expired');
     }
 
-    // Revoke the old token
     await this.prisma.refreshToken.update({
       where: { id: storedToken.id },
       data: { revokedAt: new Date() },
@@ -76,6 +75,27 @@ export class AuthService {
       ...tokens,
       user: userWithoutPassword,
     };
+  }
+
+  async getMe(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true, team: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { passwordHash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  }
+
+  async logout(userId: string) {
+    await this.prisma.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   }
 
   async generateTokens(user: UserWithRole) {
