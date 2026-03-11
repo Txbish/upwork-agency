@@ -29,6 +29,9 @@ export const IDS = {
   USER_QA: sid('user-qa'),
   NICHE_AI: sid('niche-ai'),
   NICHE_WEB: sid('niche-web'),
+  NICHE_BOOKKEEPING: sid('niche-bookkeeping'),
+  NICHE_TAX: sid('niche-tax'),
+  NICHE_LEGAL_RESEARCH: sid('niche-legal-research'),
   PROJ_1: sid('proj-1'),
   PROJ_2: sid('proj-2'),
   PROJ_3: sid('proj-3'),
@@ -36,6 +39,11 @@ export const IDS = {
   PROJ_8: sid('proj-8'),
   PROJ_9: sid('proj-9'),
   PROJ_10: sid('proj-10'),
+  PROJ_18: sid('proj-18'), // Accounting: DISCOVERED
+  PROJ_20: sid('proj-20'), // Accounting: SCRIPTED
+  PROJ_22: sid('proj-22'), // Accounting: UNDER_REVIEW
+  PROJ_29: sid('proj-29'), // Paralegal: DISCOVERED
+  PROJ_30: sid('proj-30'), // Paralegal: SCRIPTED
   MEET_1: sid('meet-1'),
   MEET_2: sid('meet-2'),
   TASK_1: sid('task-1'),
