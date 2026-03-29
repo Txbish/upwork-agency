@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "AOP — Upwork Integration",
+  "version": "0.1.0",
+  "description": "Export Upwork jobs and sync chats to the Agency Operations Platform",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://www.upwork.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.upwork.com/jobs/*", "https://www.upwork.com/nx/search/jobs/*"],
+      "js": ["dist/content-job.js"],
+      "css": ["dist/content.css"]
+    },
+    {
+      "matches": ["https://www.upwork.com/ab/messages/rooms/*"],
+      "js": ["dist/content-chat.js"],
+      "css": ["dist/content.css"]
+    }
+  ]
+}
