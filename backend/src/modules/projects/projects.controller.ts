@@ -13,9 +13,17 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards';
+import { CurrentUser } from '@/common/decorators';
+import { JwtPayload } from '@/common/interfaces';
 import { PaginationDto } from '@/common/dto';
 import { ProjectsService } from './projects.service';
-import { CreateProjectDto, UpdateProjectDto, AssignProjectDto, ReviewProjectDto } from './dto';
+import {
+  CreateProjectDto,
+  UpdateProjectDto,
+  AssignProjectDto,
+  ReviewProjectDto,
+  ImportFromUpworkDto,
+} from './dto';
 import { ProjectStage } from '@prisma/client';
 
 @ApiTags('Projects')
@@ -29,6 +37,13 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Create a new project (job discovery)' })
   create(@Body() dto: CreateProjectDto) {
     return this.projectsService.create(dto);
+  }
+
+  @Post('import-from-upwork')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Import a project from Upwork job listing (Chrome extension)' })
+  importFromUpwork(@Body() dto: ImportFromUpworkDto, @CurrentUser() user: JwtPayload) {
+    return this.projectsService.importFromUpwork(dto, user.sub);
   }
 
   @Get()

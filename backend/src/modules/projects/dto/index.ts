@@ -4,3 +4,4 @@ export * from './create-milestone.dto';
 export * from './update-milestone.dto';
 export * from './assign-project.dto';
 export * from './review-project.dto';
+export * from './import-from-upwork.dto';

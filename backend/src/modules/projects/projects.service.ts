@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { PaginationDto, PaginatedResult } from '@/common/dto';
-import { CreateProjectDto, UpdateProjectDto, ReviewProjectDto } from './dto';
+import { CreateProjectDto, UpdateProjectDto, ReviewProjectDto, ImportFromUpworkDto } from './dto';
 import { Project, ProjectStage, ReviewStatus } from '@prisma/client';
 
 // Ordered stage list — used for pipeline counting display
@@ -9,6 +9,8 @@ import { Project, ProjectStage, ReviewStatus } from '@prisma/client';
 export const STAGE_ORDER: ProjectStage[] = [
   ProjectStage.DISCOVERED,
   ProjectStage.SCRIPTED,
+  ProjectStage.SCRIPT_REVIEW,
+  ProjectStage.VIDEO_DRAFT,
   ProjectStage.UNDER_REVIEW,
   ProjectStage.BID_SUBMITTED,
   ProjectStage.VIEWED,
@@ -29,7 +31,9 @@ export const STAGE_ORDER: ProjectStage[] = [
 //   - WON is no longer a visible kanban column; it auto-advances to IN_PROGRESS
 const NEXT_STAGE: Partial<Record<ProjectStage, ProjectStage>> = {
   [ProjectStage.DISCOVERED]: ProjectStage.SCRIPTED,
-  [ProjectStage.SCRIPTED]: ProjectStage.UNDER_REVIEW,
+  [ProjectStage.SCRIPTED]: ProjectStage.SCRIPT_REVIEW,
+  [ProjectStage.SCRIPT_REVIEW]: ProjectStage.VIDEO_DRAFT,
+  [ProjectStage.VIDEO_DRAFT]: ProjectStage.UNDER_REVIEW,
   [ProjectStage.UNDER_REVIEW]: ProjectStage.BID_SUBMITTED,
   [ProjectStage.BID_SUBMITTED]: ProjectStage.VIEWED,
   [ProjectStage.VIEWED]: ProjectStage.MESSAGED,
@@ -97,11 +101,12 @@ export class ProjectsService {
           assignedCloser: USER_SELECT,
           assignedPM: USER_SELECT,
           reviewedBy: USER_SELECT,
+          scriptReviewedBy: USER_SELECT,
           _count: {
             select: { tasks: true, meetings: true, milestones: true, videoProposals: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       }),
       this.prisma.project.count({ where }),
     ]);
@@ -121,6 +126,7 @@ export class ProjectsService {
         assignedCloser: USER_SELECT,
         assignedPM: USER_SELECT,
         reviewedBy: USER_SELECT,
+        scriptReviewedBy: USER_SELECT,
         milestones: { orderBy: { createdAt: 'asc' } },
         tasks: { orderBy: { createdAt: 'desc' } },
         meetings: { orderBy: { scheduledAt: 'asc' } },
@@ -156,7 +162,9 @@ export class ProjectsService {
   /**
    * Advance the project to the next logical pipeline stage.
    * Phase 6 rules:
-   *   - SCRIPTED → UNDER_REVIEW: auto-sets reviewStatus = PENDING
+   *   - SCRIPTED → SCRIPT_REVIEW: auto-sets scriptReviewStatus = PENDING
+   *   - SCRIPT_REVIEW → VIDEO_DRAFT: requires scriptReviewStatus === APPROVED
+   *   - VIDEO_DRAFT → UNDER_REVIEW: auto-sets reviewStatus = PENDING
    *   - UNDER_REVIEW → BID_SUBMITTED: requires reviewStatus === APPROVED
    *   - INTERVIEW → WON → IN_PROGRESS: WON auto-advances to IN_PROGRESS
    * Use PATCH /:id/stage for arbitrary stage changes (admin/corrections).
@@ -173,16 +181,28 @@ export class ProjectsService {
 
     const updateData: Record<string, unknown> = { stage: nextStage };
 
-    // SCRIPTED → UNDER_REVIEW: auto-set reviewStatus to PENDING
-    if (project.stage === ProjectStage.SCRIPTED && nextStage === ProjectStage.UNDER_REVIEW) {
+    // SCRIPTED → SCRIPT_REVIEW
+    if (project.stage === ProjectStage.SCRIPTED && nextStage === ProjectStage.SCRIPT_REVIEW) {
+      updateData.scriptReviewStatus = ReviewStatus.PENDING;
+    }
+
+    // SCRIPT_REVIEW → VIDEO_DRAFT guard
+    if (project.stage === ProjectStage.SCRIPT_REVIEW && nextStage === ProjectStage.VIDEO_DRAFT) {
+      if ((project as any).scriptReviewStatus !== ReviewStatus.APPROVED) {
+        throw new BadRequestException('Cannot advance: script must be approved by a lead first');
+      }
+    }
+
+    // VIDEO_DRAFT → UNDER_REVIEW (Video Review)
+    if (project.stage === ProjectStage.VIDEO_DRAFT && nextStage === ProjectStage.UNDER_REVIEW) {
       updateData.reviewStatus = ReviewStatus.PENDING;
     }
 
-    // UNDER_REVIEW → BID_SUBMITTED: guard — require APPROVED review
+    // UNDER_REVIEW → BID_SUBMITTED guard
     if (project.stage === ProjectStage.UNDER_REVIEW && nextStage === ProjectStage.BID_SUBMITTED) {
       if ((project as any).reviewStatus !== ReviewStatus.APPROVED) {
         throw new BadRequestException(
-          'Cannot submit bid: project must be approved by a lead first (reviewStatus must be APPROVED)',
+          'Cannot submit bid: video proposal must be approved by a lead first',
         );
       }
     }
@@ -240,31 +260,80 @@ export class ProjectsService {
 
   /**
    * Review a project — lead/admin can approve or reject.
-   * Sets reviewStatus, reviewComments, reviewedById, reviewedAt.
-   * If REJECTED, the project stays in UNDER_REVIEW with REJECTED badge.
+   * Handles both SCRIPT_REVIEW and UNDER_REVIEW (video review) stages.
+   * If SCRIPT_REVIEW is APPROVED, it auto-advances to VIDEO_DRAFT.
+   * If UNDER_REVIEW is APPROVED, it stays there (closer must manually submit bid).
    */
   async reviewProject(id: string, dto: ReviewProjectDto): Promise<Project> {
     const project = await this.findById(id);
 
-    if (project.stage !== ProjectStage.UNDER_REVIEW) {
+    if (
+      project.stage !== ProjectStage.SCRIPT_REVIEW &&
+      project.stage !== ProjectStage.UNDER_REVIEW
+    ) {
       throw new BadRequestException(
-        `Cannot review project: project is at stage "${project.stage}", expected UNDER_REVIEW`,
+        `Cannot review project: project is at stage "${project.stage}", expected SCRIPT_REVIEW or UNDER_REVIEW`,
       );
+    }
+
+    const updateData: any = {};
+    let nextStage = undefined;
+
+    if (project.stage === ProjectStage.SCRIPT_REVIEW) {
+      updateData.scriptReviewStatus = dto.status;
+      updateData.scriptReviewComments = dto.comments ?? null;
+      updateData.scriptReviewedById = dto.reviewedById ?? undefined;
+      updateData.scriptReviewedAt = new Date();
+
+      if (dto.status === ReviewStatus.APPROVED) {
+        nextStage = ProjectStage.VIDEO_DRAFT;
+        updateData.stage = nextStage;
+      }
+    } else if (project.stage === ProjectStage.UNDER_REVIEW) {
+      updateData.reviewStatus = dto.status;
+      updateData.reviewComments = dto.comments ?? null;
+      updateData.reviewedById = dto.reviewedById ?? undefined;
+      updateData.reviewedAt = new Date();
     }
 
     return this.prisma.project.update({
       where: { id },
-      data: {
-        reviewStatus: dto.status,
-        reviewComments: dto.comments ?? null,
-        reviewedById: dto.reviewedById ?? undefined,
-        reviewedAt: new Date(),
-      },
+      data: updateData,
       include: {
         reviewedBy: USER_SELECT,
+        scriptReviewedBy: USER_SELECT,
         assignedCloser: USER_SELECT,
         assignedPM: USER_SELECT,
         organization: { select: { id: true, name: true, slug: true } },
+      },
+    });
+  }
+
+  /**
+   * Import a project from scraped Upwork job listing data (Chrome extension).
+   * Creates the project in DISCOVERED stage with extension metadata.
+   */
+  async importFromUpwork(dto: ImportFromUpworkDto, discoveredById?: string): Promise<Project> {
+    return this.prisma.project.create({
+      data: {
+        title: dto.title,
+        jobUrl: dto.jobUrl,
+        jobDescription: dto.jobDescription,
+        pricingType: dto.pricingType,
+        fixedPrice: dto.fixedPrice,
+        hourlyRateMin: dto.hourlyRateMin,
+        hourlyRateMax: dto.hourlyRateMax,
+        upworkSkills: dto.skills ?? [],
+        organizationId: dto.organizationId,
+        nicheId: dto.nicheId,
+        discoveredById,
+        stage: ProjectStage.DISCOVERED,
+        importedFromExtension: true,
+      },
+      include: {
+        niche: { select: { id: true, name: true, slug: true } },
+        organization: { select: { id: true, name: true, slug: true } },
+        discoveredBy: USER_SELECT,
       },
     });
   }

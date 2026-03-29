@@ -15,6 +15,7 @@ import { EventsModule } from './modules/events/events.module';
 import { ExperimentsModule } from './modules/experiments/experiments.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
+import { ChatsModule } from './modules/chats/chats.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
@@ -47,6 +48,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     ExperimentsModule,
     AnalyticsModule,
     OrganizationsModule,
+    ChatsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

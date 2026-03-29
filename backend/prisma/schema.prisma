@@ -56,17 +56,19 @@ model User {
 
   organizations UserOrganization[]
 
-  discoveredProjects Project[] @relation("ProjectDiscoveredBy")
-  lastEditedProjects Project[] @relation("ProjectLastEditedBy")
-  assignedAsCloser   Project[] @relation("ProjectCloser")
-  assignedAsPM       Project[] @relation("ProjectPM")
-  reviewedProjects   Project[] @relation("ProjectReviewer")
+  discoveredProjects     Project[] @relation("ProjectDiscoveredBy")
+  lastEditedProjects     Project[] @relation("ProjectLastEditedBy")
+  assignedAsCloser       Project[] @relation("ProjectCloser")
+  assignedAsPM           Project[] @relation("ProjectPM")
+  reviewedProjects       Project[] @relation("ProjectReviewer")
+  scriptReviewedProjects Project[] @relation("ProjectScriptReviewer")
 
-  assignedTasks Task[]       @relation("TaskAssignee")
-  qaReviews     QAReview[]   @relation("QAReviewer")
-  eventsActed   Event[]      @relation("EventActor")
+  assignedTasks Task[]         @relation("TaskAssignee")
+  qaReviews     QAReview[]     @relation("QAReviewer")
+  eventsActed   Event[]        @relation("EventActor")
   refreshTokens RefreshToken[]
-  meetings      Meeting[]    @relation("MeetingCloser")
+  meetings      Meeting[]      @relation("MeetingCloser")
+  syncedChats   ChatMessage[]  @relation("ChatSyncedBy")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -155,6 +157,8 @@ model Niche {
 enum ProjectStage {
   DISCOVERED
   SCRIPTED
+  SCRIPT_REVIEW
+  VIDEO_DRAFT
   UNDER_REVIEW
   ASSIGNED
   BID_SUBMITTED
@@ -192,7 +196,8 @@ model Project {
   fixedPrice     Float?      @map("fixed_price")
 
   // Pipeline Stage
-  stage ProjectStage @default(DISCOVERED)
+  stage     ProjectStage @default(DISCOVERED)
+  sortOrder Float        @default(0) @map("sort_order")
 
   // Script / Bid Materials
   coverLetter    String?   @map("cover_letter")
@@ -201,7 +206,14 @@ model Project {
   bidAmount      Float?    @map("bid_amount")
   bidSubmittedAt DateTime? @map("bid_submitted_at")
 
-  // Lead Review
+  // Script Review (Lead -> Bidder)
+  scriptReviewStatus   ReviewStatus? @map("script_review_status")
+  scriptReviewComments String?       @map("script_review_comments")
+  scriptReviewedById   String?       @map("script_reviewed_by_id")
+  scriptReviewedBy     User?         @relation("ProjectScriptReviewer", fields: [scriptReviewedById], references: [id])
+  scriptReviewedAt     DateTime?     @map("script_reviewed_at")
+
+  // Video Review (Lead -> Closer)
   reviewStatus   ReviewStatus? @map("review_status")
   reviewComments String?       @map("review_comments")
   reviewedById   String?       @map("reviewed_by_id")
@@ -243,7 +255,12 @@ model Project {
   tasks                 Task[]
   meetings              Meeting[]
   videoProposals        VideoProposal[]
+  chatMessages          ChatMessage[]
   experimentAssignments ExperimentAssignment[]
+
+  // Extension metadata
+  importedFromExtension Boolean @default(false) @map("imported_from_extension")
+  upworkSkills          String[] @map("upwork_skills")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -406,6 +423,37 @@ model QAReview {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("qa_reviews")
+}
+
+// -------------------------------------------------------
+// Chat Messages (Synced from Upwork via Extension)
+// -------------------------------------------------------
+
+enum ChatSenderType {
+  CLIENT
+  AGENCY
+}
+
+model ChatMessage {
+  id        String  @id @default(uuid())
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  senderName String         @map("sender_name")
+  senderType ChatSenderType @map("sender_type")
+  content    String
+
+  sentAt       DateTime @map("sent_at")
+  upworkRoomId String?  @map("upwork_room_id")
+
+  syncedById String? @map("synced_by_id")
+  syncedBy   User?   @relation("ChatSyncedBy", fields: [syncedById], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([projectId, sentAt, senderName], map: "uq_chat_messages_dedup")
+  @@index([projectId], map: "idx_chat_messages_project")
+  @@map("chat_messages")
 }
 
 // -------------------------------------------------------

@@ -3,6 +3,8 @@
 export enum ProjectStage {
   DISCOVERED = 'DISCOVERED',
   SCRIPTED = 'SCRIPTED',
+  SCRIPT_REVIEW = 'SCRIPT_REVIEW',
+  VIDEO_DRAFT = 'VIDEO_DRAFT',
   UNDER_REVIEW = 'UNDER_REVIEW',
   ASSIGNED = 'ASSIGNED',
   BID_SUBMITTED = 'BID_SUBMITTED',
@@ -52,6 +54,11 @@ export enum ReviewStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
+}
+
+export enum ChatSenderType {
+  CLIENT = 'CLIENT',
+  AGENCY = 'AGENCY',
 }
 
 export enum ExperimentStatus {
@@ -143,6 +150,7 @@ export interface Project {
 
   // Pipeline Stage
   stage: ProjectStage;
+  sortOrder: number;
 
   // Script / Bid Materials
   coverLetter?: string;
@@ -151,7 +159,14 @@ export interface Project {
   bidAmount?: number;
   bidSubmittedAt?: string;
 
-  // Lead Review
+  // Script Review (Lead -> Bidder)
+  scriptReviewStatus?: ReviewStatus;
+  scriptReviewComments?: string;
+  scriptReviewedById?: string;
+  scriptReviewedBy?: User;
+  scriptReviewedAt?: string;
+
+  // Video Review (Lead -> Closer)
   reviewStatus?: ReviewStatus;
   reviewComments?: string;
   reviewedById?: string;
@@ -184,11 +199,16 @@ export interface Project {
   startDate?: string;
   endDate?: string;
 
+  // Extension metadata
+  importedFromExtension?: boolean;
+  upworkSkills?: string[];
+
   // Relations
   milestones?: Milestone[];
   tasks?: Task[];
   meetings?: Meeting[];
   videoProposals?: VideoProposal[];
+  chatMessages?: ChatMessage[];
   experimentAssignments?: ExperimentAssignment[];
 
   // Counts (from _count includes)
@@ -250,6 +270,41 @@ export interface Meeting {
   driveUrl?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// ─── Chat Messages (Synced from Upwork Extension) ───────────────────────────
+
+export interface ChatMessage {
+  id: string;
+  projectId: string;
+  senderName: string;
+  senderType: ChatSenderType;
+  content: string;
+  sentAt: string;
+  upworkRoomId?: string;
+  syncedById?: string;
+  syncedBy?: User;
+  createdAt: string;
+}
+
+export interface SyncChatsPayload {
+  upworkRoomId?: string;
+  messages: {
+    senderName: string;
+    senderType: ChatSenderType;
+    content: string;
+    sentAt: string;
+  }[];
+}
+
+export interface SyncChatsResponse {
+  synced: number;
+  total: number;
+}
+
+export interface ChatLatestResponse {
+  latestSentAt: string | null;
+  count: number;
 }
 
 // ─── Tasks ────────────────────────────────────────────────────────────────────
