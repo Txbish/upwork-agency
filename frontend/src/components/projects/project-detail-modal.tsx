@@ -776,14 +776,43 @@ export function ProjectDetailModal({ projectId, onClose }: ProjectDetailModalPro
     setReviewComments('');
   };
 
+  // Track if user needs to update video before resubmitting
+  const [requireVideoUpdate, setRequireVideoUpdate] = useState(false);
+
   const handleResubmitReview = () => {
     if (!project) return;
+
+    // For video review rejections, require video update first
+    if (
+      project.stage === ProjectStage.UNDER_REVIEW &&
+      project.reviewStatus === ReviewStatus.REJECTED
+    ) {
+      setActiveTab('videos');
+      setAddingVideo(true);
+      setRequireVideoUpdate(true);
+      return;
+    }
+
+    // For script review rejections, resubmit directly (script edited in place)
     reviewProject.mutate({
       id: project.id,
       status: ReviewStatus.PENDING,
       comments: undefined,
       reviewedById: user?.id,
     });
+  };
+
+  const handleResubmitWithVideo = () => {
+    if (!project) return;
+    reviewProject.mutate(
+      {
+        id: project.id,
+        status: ReviewStatus.PENDING,
+        comments: undefined,
+        reviewedById: user?.id,
+      },
+      { onSuccess: () => setRequireVideoUpdate(false) },
+    );
   };
 
   const handleAddVideo = async (e: React.FormEvent) => {
@@ -1406,6 +1435,22 @@ export function ProjectDetailModal({ projectId, onClose }: ProjectDetailModalPro
                     value="videos"
                     className="mt-0 flex-1 space-y-4 overflow-y-auto px-6 pb-6"
                   >
+                    {requireVideoUpdate && (
+                      <div className="rounded-md border border-amber/40 bg-amber/10 p-3 space-y-2">
+                        <p className="text-sm font-medium text-amber-foreground">
+                          Video review was rejected. Please upload a new video before resubmitting.
+                        </p>
+                        <Button
+                          size="sm"
+                          onClick={handleResubmitWithVideo}
+                          disabled={reviewProject.isPending}
+                        >
+                          {reviewProject.isPending
+                            ? 'Resubmitting...'
+                            : 'Resubmit for Video Review'}
+                        </Button>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <h3 className="flex items-center gap-1.5 text-sm font-semibold">
                         <Video className="h-4 w-4 text-muted-foreground" />
