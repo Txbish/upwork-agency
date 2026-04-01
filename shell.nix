@@ -4,6 +4,9 @@
 
 pkgs.mkShell {
   packages = with pkgs; [
+    # AWS CLI
+    awscli2
+
     # Runtime & Package Manager
     bun
     nodejs_24
@@ -12,6 +15,9 @@ pkgs.mkShell {
     prisma
     prisma-engines
     openssl
+
+    # Containers
+    docker-compose
 
     # Monorepo
     turbo
