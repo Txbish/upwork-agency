@@ -138,7 +138,7 @@ export default function ProjectsPage() {
       });
       queryClient.prefetchQuery({
         queryKey: ['tasks', 'by-project', id],
-        queryFn: () => api.get(`/tasks?projectId=${id}`).then((r: { data: unknown }) => r.data),
+        queryFn: () => api.get(`/tasks/by-project/${id}`).then((r: { data: unknown }) => r.data),
         staleTime: 30_000,
       });
     },

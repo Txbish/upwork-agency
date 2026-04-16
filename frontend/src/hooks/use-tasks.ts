@@ -65,14 +65,73 @@ export function useUpdateTask() {
       const res = await api.patch(`/tasks/${id}`, data);
       return res.data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('Task updated');
+    onMutate: async (variables) => {
+      await qc.cancelQueries({ queryKey: ['tasks'] });
+      const previous = qc.getQueriesData({ queryKey: ['tasks'] });
+
+      qc.setQueriesData({ queryKey: ['tasks'] }, (old) => applyTaskPatch(old, variables));
+
+      return { previous };
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _variables, context) => {
+      context?.previous?.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
       toast.error(extractError(error, 'Failed to update task'));
     },
+    onSuccess: () => {
+      toast.success('Task updated');
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['tasks'] });
+    },
   });
+}
+
+function applyTaskPatch(data: unknown, patch: Partial<Task> & { id: string }): typeof data {
+  if (!data) return data;
+
+  if (Array.isArray(data)) {
+    return updateTaskList(data, patch);
+  }
+
+  if (typeof data === 'object') {
+    if (isPaginatedTasks(data)) {
+      const next = updateTaskList(data.data, patch);
+      if (next === data.data) return data;
+      return { ...data, data: next };
+    }
+
+    if (isTaskEntity(data) && data.id === patch.id) {
+      return { ...data, ...patch } as Task;
+    }
+  }
+
+  return data;
+}
+
+function updateTaskList(list: Task[], patch: Partial<Task> & { id: string }) {
+  let changed = false;
+  const next = list.map((task) => {
+    if (task.id !== patch.id) return task;
+    changed = true;
+    return { ...task, ...patch };
+  });
+
+  return changed ? next : list;
+}
+
+function isPaginatedTasks(value: unknown): value is PaginatedResponse<Task> {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    'data' in value &&
+    Array.isArray((value as PaginatedResponse<Task>).data)
+  );
+}
+
+function isTaskEntity(value: unknown): value is Task {
+  return !!value && typeof value === 'object' && 'id' in value && 'status' in value;
 }
 
 export function useAssignTask() {

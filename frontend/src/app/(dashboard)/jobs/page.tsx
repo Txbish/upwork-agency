@@ -411,7 +411,7 @@ export default function ProjectsPage() {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="gradient-text text-2xl font-bold tracking-tight">Projects</h1>
+          <h1 className="gradient-text text-2xl font-bold tracking-tight">Jobs</h1>
           <p className="text-sm text-muted-foreground">
             Drag cards to the next column to advance stage
           </p>

@@ -11,6 +11,8 @@ import {
   closestCorners,
   type DragStartEvent,
   type DragEndEvent,
+  type DragOverEvent,
+  type DragCancelEvent,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
@@ -19,6 +21,7 @@ import { Eye, EyeOff, Info } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useUpdateTask } from '@/hooks/use-tasks';
 import { TaskStatus } from '@/types';
 import type { Task } from '@/types';
@@ -53,9 +56,10 @@ interface KanbanColumnProps {
   column: { id: TaskStatus; title: string; color: string };
   tasks: Task[];
   showProject?: boolean;
+  showDropPlaceholder?: boolean;
 }
 
-function KanbanColumn({ column, tasks, showProject }: KanbanColumnProps) {
+function KanbanColumn({ column, tasks, showProject, showDropPlaceholder }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   const taskIds = tasks.map((t) => t.id);
@@ -84,6 +88,14 @@ function KanbanColumn({ column, tasks, showProject }: KanbanColumnProps) {
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-2">
+            {showDropPlaceholder && (
+              <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
+                <div className="space-y-2">
+                  <Skeleton className="h-3.5 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              </div>
+            )}
             {tasks.map((task, i) => (
               <TaskKanbanCard key={task.id} task={task} index={i} showProject={showProject} />
             ))}
@@ -107,7 +119,7 @@ interface TaskKanbanProps {
 export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
   const [showFinalised, setShowFinalised] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [optimisticTasks, setOptimisticTasks] = useState<Task[] | null>(null);
+  const [overColumnId, setOverColumnId] = useState<TaskStatus | null>(null);
   const updateTask = useUpdateTask();
 
   const showProject = !projectId; // show project name when viewing all tasks
@@ -119,10 +131,9 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
 
   const columns = showFinalised ? [...KANBAN_COLUMNS, FINALISED_COLUMN] : KANBAN_COLUMNS;
 
-  const effectiveTasks = optimisticTasks ?? tasks;
   const tasksByStatus = columns.reduce(
     (acc, col) => {
-      acc[col.id] = effectiveTasks.filter((t) => t.status === col.id);
+      acc[col.id] = tasks.filter((t) => t.status === col.id);
       return acc;
     },
     {} as Record<TaskStatus, Task[]>,
@@ -133,8 +144,28 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
     if (task) setActiveTask(task);
   }
 
+  function resolveColumnId(overId: unknown) {
+    if (!overId) return null;
+    if (Object.values(TaskStatus).includes(overId as TaskStatus)) {
+      return overId as TaskStatus;
+    }
+    const targetTask = tasks.find((t) => t.id === overId);
+    return targetTask?.status ?? null;
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const nextColumn = resolveColumnId(event.over?.id);
+    setOverColumnId(nextColumn);
+  }
+
+  function handleDragCancel(_event: DragCancelEvent) {
+    setActiveTask(null);
+    setOverColumnId(null);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     setActiveTask(null);
+    setOverColumnId(null);
     const { active, over } = event;
     if (!over) return;
 
@@ -142,31 +173,11 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
     if (!draggedTask) return;
 
     // Determine target status — over.id could be a column id or another task id
-    let newStatus: TaskStatus | undefined;
-
-    if (Object.values(TaskStatus).includes(over.id as TaskStatus)) {
-      newStatus = over.id as TaskStatus;
-    } else {
-      const targetTask = effectiveTasks.find((t) => t.id === over.id);
-      if (targetTask) newStatus = targetTask.status;
-    }
+    const newStatus = resolveColumnId(over.id);
 
     if (!newStatus || newStatus === draggedTask.status) return;
 
-    // Optimistic: update local state immediately
-    const updated = effectiveTasks.map((t) =>
-      t.id === draggedTask.id ? { ...t, status: newStatus! } : t,
-    );
-    setOptimisticTasks(updated);
-
-    // Call backend — clear optimistic state when done
-    updateTask.mutate(
-      { id: draggedTask.id, status: newStatus },
-      {
-        onSuccess: () => {},
-        onSettled: () => setOptimisticTasks(null),
-      },
-    );
+    updateTask.mutate({ id: draggedTask.id, status: newStatus });
   }
 
   return (
@@ -194,7 +205,9 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <motion.div
           className="flex gap-4 overflow-x-auto pb-4"
@@ -208,6 +221,7 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
               column={col}
               tasks={tasksByStatus[col.id] ?? []}
               showProject={showProject}
+              showDropPlaceholder={!!activeTask && overColumnId === col.id}
             />
           ))}
         </motion.div>

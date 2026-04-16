@@ -312,6 +312,9 @@ export default function ProjectDetailPage() {
   const meetings = meetingsData?.data ?? [];
   const milestones = milestonesData ?? [];
   const allUsers = usersData?.data ?? [];
+  const safeTasks = Array.isArray(tasks)
+    ? tasks
+    : ((tasks as { data?: Task[] } | undefined)?.data ?? []);
   const developerUsers = allUsers.filter((u) =>
     ['developer', 'operator'].includes(u.role?.name?.toLowerCase() ?? ''),
   );
@@ -362,7 +365,7 @@ export default function ProjectDetailPage() {
   const isOngoing = !project.endDate;
 
   // Financial computations
-  const allTasks = tasks ?? [];
+  const allTasks = safeTasks;
   const doneTasks = allTasks.filter(
     (t) => t.status === TaskStatus.DONE || t.status === TaskStatus.FINALISED,
   );
