@@ -8,9 +8,7 @@ import { Project, ProjectStage, ReviewStatus } from '@prisma/client';
 // ASSIGNED is kept in the enum for backward compat but excluded from visible pipeline
 export const STAGE_ORDER: ProjectStage[] = [
   ProjectStage.DISCOVERED,
-  ProjectStage.SCRIPTED,
   ProjectStage.SCRIPT_REVIEW,
-  ProjectStage.VIDEO_DRAFT,
   ProjectStage.UNDER_REVIEW,
   ProjectStage.BID_SUBMITTED,
   ProjectStage.VIEWED,
@@ -24,16 +22,14 @@ export const STAGE_ORDER: ProjectStage[] = [
 
 // Valid forward transitions (strict mode via /advance endpoint)
 // Phase 6 changes:
-//   - Removed UNDER_REVIEW → ASSIGNED (ASSIGNED stage removed from workflow)
-//   - UNDER_REVIEW → BID_SUBMITTED (guarded by reviewStatus === APPROVED in advanceStage)
-//   - SCRIPTED → UNDER_REVIEW (auto-sets reviewStatus = PENDING in advanceStage)
+//   - DISCOVERED → SCRIPT_REVIEW (auto-sets scriptReviewStatus = PENDING)
+//   - SCRIPT_REVIEW → UNDER_REVIEW (guarded by scriptReviewStatus === APPROVED)
+//   - UNDER_REVIEW → BID_SUBMITTED (guarded by reviewStatus === APPROVED)
 //   - INTERVIEW → WON (WON auto-advances to IN_PROGRESS in advanceStage)
 //   - WON is no longer a visible kanban column; it auto-advances to IN_PROGRESS
 const NEXT_STAGE: Partial<Record<ProjectStage, ProjectStage>> = {
-  [ProjectStage.DISCOVERED]: ProjectStage.SCRIPTED,
-  [ProjectStage.SCRIPTED]: ProjectStage.SCRIPT_REVIEW,
-  [ProjectStage.SCRIPT_REVIEW]: ProjectStage.VIDEO_DRAFT,
-  [ProjectStage.VIDEO_DRAFT]: ProjectStage.UNDER_REVIEW,
+  [ProjectStage.DISCOVERED]: ProjectStage.SCRIPT_REVIEW,
+  [ProjectStage.SCRIPT_REVIEW]: ProjectStage.UNDER_REVIEW,
   [ProjectStage.UNDER_REVIEW]: ProjectStage.BID_SUBMITTED,
   [ProjectStage.BID_SUBMITTED]: ProjectStage.VIEWED,
   [ProjectStage.VIEWED]: ProjectStage.MESSAGED,
@@ -122,7 +118,7 @@ export class ProjectsService {
         }),
         this.prisma.task.groupBy({
           by: ['projectId'],
-          where: { projectId: { in: projectIds }, isUrgent: true },
+          where: { projectId: { in: projectIds }, priority: 0 },
           _count: { id: true },
         }),
       ]);
@@ -162,7 +158,7 @@ export class ProjectsService {
         scriptReviewedBy: USER_SELECT,
         milestones: { orderBy: { createdAt: 'asc' } },
         tasks: {
-          orderBy: [{ isUrgent: 'desc' }, { priority: 'desc' }, { createdAt: 'asc' }],
+          orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
           include: { assignee: USER_SELECT },
         },
         meetings: {
@@ -203,9 +199,8 @@ export class ProjectsService {
   /**
    * Advance the project to the next logical pipeline stage.
    * Phase 6 rules:
-   *   - SCRIPTED → SCRIPT_REVIEW: auto-sets scriptReviewStatus = PENDING
-   *   - SCRIPT_REVIEW → VIDEO_DRAFT: requires scriptReviewStatus === APPROVED
-   *   - VIDEO_DRAFT → UNDER_REVIEW: auto-sets reviewStatus = PENDING
+   *   - DISCOVERED → SCRIPT_REVIEW: auto-sets scriptReviewStatus = PENDING
+   *   - SCRIPT_REVIEW → UNDER_REVIEW: requires scriptReviewStatus === APPROVED
    *   - UNDER_REVIEW → BID_SUBMITTED: requires reviewStatus === APPROVED
    *   - INTERVIEW → WON → IN_PROGRESS: WON auto-advances to IN_PROGRESS
    * Use PATCH /:id/stage for arbitrary stage changes (admin/corrections).
@@ -222,20 +217,16 @@ export class ProjectsService {
 
     const updateData: Record<string, unknown> = { stage: nextStage };
 
-    // SCRIPTED → SCRIPT_REVIEW
-    if (project.stage === ProjectStage.SCRIPTED && nextStage === ProjectStage.SCRIPT_REVIEW) {
+    // DISCOVERED → SCRIPT_REVIEW
+    if (project.stage === ProjectStage.DISCOVERED && nextStage === ProjectStage.SCRIPT_REVIEW) {
       updateData.scriptReviewStatus = ReviewStatus.PENDING;
     }
 
-    // SCRIPT_REVIEW → VIDEO_DRAFT guard
-    if (project.stage === ProjectStage.SCRIPT_REVIEW && nextStage === ProjectStage.VIDEO_DRAFT) {
+    // SCRIPT_REVIEW → UNDER_REVIEW guard
+    if (project.stage === ProjectStage.SCRIPT_REVIEW && nextStage === ProjectStage.UNDER_REVIEW) {
       if ((project as any).scriptReviewStatus !== ReviewStatus.APPROVED) {
         throw new BadRequestException('Cannot advance: script must be approved by a lead first');
       }
-    }
-
-    // VIDEO_DRAFT → UNDER_REVIEW (Video Review)
-    if (project.stage === ProjectStage.VIDEO_DRAFT && nextStage === ProjectStage.UNDER_REVIEW) {
       updateData.reviewStatus = ReviewStatus.PENDING;
     }
 
@@ -302,7 +293,7 @@ export class ProjectsService {
   /**
    * Review a project — lead/admin can approve or reject.
    * Handles both SCRIPT_REVIEW and UNDER_REVIEW (video review) stages.
-   * If SCRIPT_REVIEW is APPROVED, it auto-advances to VIDEO_DRAFT.
+   * If SCRIPT_REVIEW is APPROVED, it auto-advances to UNDER_REVIEW.
    * If UNDER_REVIEW is APPROVED, it stays there (closer must manually submit bid).
    */
   async reviewProject(id: string, dto: ReviewProjectDto): Promise<Project> {
@@ -327,8 +318,9 @@ export class ProjectsService {
       updateData.scriptReviewedAt = new Date();
 
       if (dto.status === ReviewStatus.APPROVED) {
-        nextStage = ProjectStage.VIDEO_DRAFT;
+        nextStage = ProjectStage.UNDER_REVIEW;
         updateData.stage = nextStage;
+        updateData.reviewStatus = ReviewStatus.PENDING;
       }
     } else if (project.stage === ProjectStage.UNDER_REVIEW) {
       updateData.reviewStatus = dto.status;

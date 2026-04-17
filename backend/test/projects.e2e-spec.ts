@@ -157,7 +157,7 @@ describe('Projects (e2e)', () => {
   });
 
   describe('POST /api/projects/:id/advance', () => {
-    it('should advance DISCOVERED to SCRIPTED', async () => {
+    it('should advance DISCOVERED to SCRIPT_REVIEW', async () => {
       // First create a fresh project to advance
       const createRes = await request(server(app))
         .post('/api/projects')
@@ -177,7 +177,7 @@ describe('Projects (e2e)', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      expect(res.body.stage).toBe('SCRIPTED');
+      expect(res.body.stage).toBe('SCRIPT_REVIEW');
     });
   });
 
@@ -249,13 +249,13 @@ describe('Projects (e2e)', () => {
 
       const id = createRes.body.id;
 
-      // DISCOVERED -> SCRIPTED
+      // DISCOVERED -> SCRIPT_REVIEW
       await request(server(app))
         .post(`/api/projects/${id}/advance`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      // SCRIPTED -> UNDER_REVIEW (auto-sets reviewStatus: PENDING)
+      // SCRIPT_REVIEW -> UNDER_REVIEW (auto-sets reviewStatus: PENDING)
       await request(server(app))
         .post(`/api/projects/${id}/advance`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -292,13 +292,13 @@ describe('Projects (e2e)', () => {
 
       const id = createRes.body.id;
 
-      // DISCOVERED -> SCRIPTED
+      // DISCOVERED -> SCRIPT_REVIEW
       await request(server(app))
         .post(`/api/projects/${id}/advance`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      // SCRIPTED -> UNDER_REVIEW (auto-sets reviewStatus: PENDING)
+      // SCRIPT_REVIEW -> UNDER_REVIEW (auto-sets reviewStatus: PENDING)
       await request(server(app))
         .post(`/api/projects/${id}/advance`)
         .set('Authorization', `Bearer ${adminToken}`)

@@ -40,10 +40,10 @@ export const IDS = {
   PROJ_9: sid('proj-9'),
   PROJ_10: sid('proj-10'),
   PROJ_18: sid('proj-18'), // Accounting: DISCOVERED
-  PROJ_20: sid('proj-20'), // Accounting: SCRIPTED
+  PROJ_20: sid('proj-20'), // Accounting: SCRIPT_REVIEW
   PROJ_22: sid('proj-22'), // Accounting: UNDER_REVIEW
   PROJ_29: sid('proj-29'), // Paralegal: DISCOVERED
-  PROJ_30: sid('proj-30'), // Paralegal: SCRIPTED
+  PROJ_30: sid('proj-30'), // Paralegal: SCRIPT_REVIEW
   MEET_1: sid('meet-1'),
   MEET_2: sid('meet-2'),
   TASK_1: sid('task-1'),

@@ -24,7 +24,7 @@ import {
 
 const FUNNEL_STAGES = [
   { key: 'discovered', label: 'Discovered', color: 'hsl(220, 70%, 55%)' },
-  { key: 'scripted', label: 'Scripted', color: 'hsl(210, 70%, 55%)' },
+  { key: 'scriptReview', label: 'Script Review', color: 'hsl(210, 70%, 55%)' },
   { key: 'underReview', label: 'Under Review', color: 'hsl(200, 70%, 55%)' },
   { key: 'assigned', label: 'Assigned', color: 'hsl(190, 70%, 55%)' },
   { key: 'bidSubmitted', label: 'Bid Submitted', color: 'hsl(180, 70%, 50%)' },

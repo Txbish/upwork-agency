@@ -64,7 +64,7 @@ NestJS modular monolith. All routes prefixed with `/api/`. Global guards: `JwtAu
 - **`modules/`** — Feature modules: `identity` (auth + users), `organizations`, `projects`, `niches`, `video`, `meetings`, `tasks`, `qa`, `events`, `experiments`, `analytics`
 
 The **Project** model is the core entity. It tracks the full pipeline via `ProjectStage` enum:
-`DISCOVERED → SCRIPTED → SCRIPT_REVIEW → VIDEO_DRAFT → UNDER_REVIEW → ASSIGNED → BID_SUBMITTED → VIEWED → MESSAGED → INTERVIEW → WON → IN_PROGRESS → COMPLETED (or LOST/CANCELLED)`
+`DISCOVERED → SCRIPT_REVIEW → UNDER_REVIEW → ASSIGNED → BID_SUBMITTED → VIEWED → MESSAGED → INTERVIEW → WON → IN_PROGRESS → COMPLETED (or LOST/CANCELLED)`
 
 ### Frontend (`frontend/src/`)
 

@@ -70,22 +70,10 @@ const COLUMNS: ColumnDef[] = [
     color: 'bg-slate-400',
   },
   {
-    id: 'scripted',
-    title: 'Scripted',
-    stages: [ProjectStage.SCRIPTED],
-    color: 'bg-blue-400',
-  },
-  {
     id: 'script_review',
     title: 'Script Review',
     stages: [ProjectStage.SCRIPT_REVIEW],
     color: 'bg-indigo-400',
-  },
-  {
-    id: 'video_draft',
-    title: 'Video Draft',
-    stages: [ProjectStage.VIDEO_DRAFT],
-    color: 'bg-cyan-400',
   },
   {
     id: 'under_review',
@@ -123,8 +111,8 @@ const HIDDEN_STAGES = [
 const ROLE_VISIBLE_COLUMNS: Record<string, string[]> = {
   admin: COLUMN_ORDER,
   lead: COLUMN_ORDER,
-  bidder: ['discovered', 'scripted', 'script_review'],
-  closer: ['video_draft', 'under_review', 'bid_submitted', 'bid_active'],
+  bidder: ['discovered', 'script_review'],
+  closer: ['under_review', 'bid_submitted', 'bid_active'],
 };
 
 const BLOCKED_ROLES = ['operator', 'qa'];
@@ -807,9 +795,7 @@ export default function ProjectsPage() {
               <SelectContent>
                 {[
                   ProjectStage.DISCOVERED,
-                  ProjectStage.SCRIPTED,
                   ProjectStage.SCRIPT_REVIEW,
-                  ProjectStage.VIDEO_DRAFT,
                   ProjectStage.UNDER_REVIEW,
                   ProjectStage.BID_SUBMITTED,
                   ProjectStage.VIEWED,

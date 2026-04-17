@@ -16,7 +16,7 @@ interface DashboardSummary {
 
 interface FunnelMetrics {
   discovered: number;
-  scripted: number;
+  scriptReview: number;
   underReview: number;
   assigned: number;
   bidSubmitted: number;

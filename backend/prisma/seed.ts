@@ -478,7 +478,7 @@ async function seedProjects(
       teamId,
       discoveredById: users[IDS.USER_BIDDER].id,
     },
-    // Stage: SCRIPTED
+    // Stage: SCRIPT_REVIEW
     {
       id: IDS.PROJ_2,
       title: 'React Dashboard for SaaS Analytics Platform',
@@ -488,7 +488,7 @@ async function seedProjects(
       pricingType: PricingType.HOURLY,
       hourlyRateMin: 50,
       hourlyRateMax: 75,
-      stage: ProjectStage.SCRIPTED,
+      stage: ProjectStage.SCRIPT_REVIEW,
       coverLetter:
         "Hi! We specialize in building beautiful, high-performance React dashboards. Our team has delivered 20+ analytics platforms for SaaS companies, and we'd love to bring that expertise to your project. We use Recharts/Victory for visualizations and TanStack Query for real-time data management.",
       videoScript:
@@ -747,7 +747,7 @@ async function seedProjects(
       teamId,
       discoveredById: users[IDS.USER_BIDDER2].id,
     },
-    // Stage: SCRIPTED — ML pipeline
+    // Stage: SCRIPT_REVIEW — ML pipeline
     {
       id: IDS.PROJ_15,
       title: 'Python ML Pipeline for Predictive Analytics',
@@ -756,7 +756,7 @@ async function seedProjects(
         'Build a production-grade ML pipeline: data ingestion, feature engineering, model training (XGBoost + LightGBM), FastAPI serving layer.',
       pricingType: PricingType.FIXED,
       fixedPrice: 4500,
-      stage: ProjectStage.SCRIPTED,
+      stage: ProjectStage.SCRIPT_REVIEW,
       coverLetter:
         "Our data science team has built production ML systems for 15+ companies. We'll deliver a clean, well-tested pipeline with CI/CD for model retraining and a Grafana dashboard for model performance monitoring.",
       videoScript:
@@ -839,7 +839,7 @@ async function seedProjects(
       teamId,
       discoveredById: users[IDS.USER_BIDDER].id,
     },
-    // Stage: SCRIPTED
+    // Stage: SCRIPT_REVIEW
     {
       id: IDS.PROJ_20,
       title: 'Annual Tax Return Preparation for Multi-Member LLC',
@@ -848,7 +848,7 @@ async function seedProjects(
         'Need CPA to prepare Form 1065 and K-1s for our 3-member LLC. Revenue ~$280k, straightforward business with home office deductions.',
       pricingType: PricingType.FIXED,
       fixedPrice: 1200,
-      stage: ProjectStage.SCRIPTED,
+      stage: ProjectStage.SCRIPT_REVIEW,
       coverLetter:
         "Our licensed CPAs specialize in pass-through entity taxation. We've filed 200+ LLC returns and always deliver on time. We'll review your prior year returns at no charge to identify any missed deductions.",
       videoScript:
@@ -860,7 +860,7 @@ async function seedProjects(
       lastEditedById: users[IDS.USER_BIDDER].id,
       assignedCloserId: users[IDS.USER_CLOSER].id,
     },
-    // Stage: SCRIPTED
+    // Stage: SCRIPT_REVIEW
     {
       id: IDS.PROJ_21,
       title: 'Payroll Processing Setup for 12-Person Team',
@@ -870,7 +870,7 @@ async function seedProjects(
       pricingType: PricingType.HOURLY,
       hourlyRateMin: 20,
       hourlyRateMax: 30,
-      stage: ProjectStage.SCRIPTED,
+      stage: ProjectStage.SCRIPT_REVIEW,
       coverLetter:
         "We process payroll for 40+ businesses ranging from 5 to 200 employees. We use Gusto/ADP and handle all federal and state filings. You'll have a dedicated payroll specialist who's available same-day for urgent questions.",
       videoScript:
@@ -1038,7 +1038,7 @@ async function seedProjects(
       teamId,
       discoveredById: users[IDS.USER_BIDDER].id,
     },
-    // Stage: SCRIPTED
+    // Stage: SCRIPT_REVIEW
     {
       id: IDS.PROJ_30,
       title: 'Document Review and Legal Memo — Employment Law',
@@ -1047,7 +1047,7 @@ async function seedProjects(
         'Review 200+ pages of employment contracts and HR policies. Prepare legal memo identifying non-compliant provisions under CA employment law.',
       pricingType: PricingType.FIXED,
       fixedPrice: 1800,
-      stage: ProjectStage.SCRIPTED,
+      stage: ProjectStage.SCRIPT_REVIEW,
       coverLetter:
         "Our paralegal team specializes in CA employment law document review. We use Relativity for efficient document management and can turn around a comprehensive memo within 5 business days. We've reviewed 50k+ employment documents for law firms and HR departments.",
       videoScript:

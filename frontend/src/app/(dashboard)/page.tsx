@@ -21,7 +21,7 @@ import {
 
 const STAGE_LABELS: Record<string, string> = {
   [ProjectStage.DISCOVERED]: 'Discovered',
-  [ProjectStage.SCRIPTED]: 'Scripted',
+  [ProjectStage.SCRIPT_REVIEW]: 'Script Review',
   [ProjectStage.UNDER_REVIEW]: 'Under Review',
   [ProjectStage.ASSIGNED]: 'Assigned',
   [ProjectStage.BID_SUBMITTED]: 'Bid Submitted',
@@ -37,7 +37,7 @@ const STAGE_LABELS: Record<string, string> = {
 
 const STAGE_COLORS: Record<string, string> = {
   [ProjectStage.DISCOVERED]: 'bg-slate-500/20 text-slate-400 border border-slate-500/25',
-  [ProjectStage.SCRIPTED]: 'bg-blue-500/20 text-blue-400 border border-blue-500/25',
+  [ProjectStage.SCRIPT_REVIEW]: 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/25',
   [ProjectStage.UNDER_REVIEW]: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/25',
   [ProjectStage.ASSIGNED]: 'bg-purple-500/20 text-purple-400 border border-purple-500/25',
   [ProjectStage.BID_SUBMITTED]: 'bg-orange-500/20 text-orange-400 border border-orange-500/25',

@@ -2,9 +2,7 @@
 
 export enum ProjectStage {
   DISCOVERED = 'DISCOVERED',
-  SCRIPTED = 'SCRIPTED',
   SCRIPT_REVIEW = 'SCRIPT_REVIEW',
-  VIDEO_DRAFT = 'VIDEO_DRAFT',
   UNDER_REVIEW = 'UNDER_REVIEW',
   ASSIGNED = 'ASSIGNED',
   BID_SUBMITTED = 'BID_SUBMITTED',
@@ -210,6 +208,10 @@ export interface Project {
   startDate?: string;
   endDate?: string;
 
+  // Financial overrides
+  hoursBilledOverride?: number;
+  currentEarningsOverride?: number;
+
   // Extension metadata
   importedFromExtension?: boolean;
   upworkSkills?: string[];
@@ -243,6 +245,7 @@ export interface Milestone {
   id: string;
   projectId: string;
   name: string;
+  description?: string;
   dueDate?: string;
   amount?: number;
   completed: boolean;
@@ -361,7 +364,6 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   priority: number;
-  isUrgent?: boolean;
   estimatedHours?: number;
   completedAt?: string;
   qaReview?: QAReview;

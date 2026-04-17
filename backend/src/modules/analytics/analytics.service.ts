@@ -29,7 +29,7 @@ export class AnalyticsService {
     endDate: Date,
   ): Promise<{
     discovered: number;
-    scripted: number;
+    scriptReview: number;
     underReview: number;
     assigned: number;
     bidSubmitted: number;
@@ -56,11 +56,13 @@ export class AnalyticsService {
     }
 
     const get = (s: ProjectStage) => byStage[s] ?? 0;
+    const scriptReviewCount = get(ProjectStage.SCRIPT_REVIEW);
+    const underReviewCount = get(ProjectStage.UNDER_REVIEW);
 
     return {
       discovered: get(ProjectStage.DISCOVERED),
-      scripted: get(ProjectStage.SCRIPTED),
-      underReview: get(ProjectStage.UNDER_REVIEW),
+      scriptReview: scriptReviewCount,
+      underReview: underReviewCount,
       assigned: get(ProjectStage.ASSIGNED),
       bidSubmitted: get(ProjectStage.BID_SUBMITTED),
       viewed: get(ProjectStage.VIEWED),

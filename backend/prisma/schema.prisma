@@ -19,7 +19,8 @@ model Role {
   id   String @id @default(uuid())
   name String @unique
 
-  users User[]
+  users       User[]
+  invitations Invitation[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -31,8 +32,9 @@ model Team {
   id   String @id @default(uuid())
   name String
 
-  users    User[]
-  projects Project[]
+  users       User[]
+  projects    Project[]
+  invitations Invitation[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -71,6 +73,7 @@ model User {
   syncedChats       ChatMessage[]  @relation("ChatSyncedBy")
   addedProjectLinks ProjectLink[]  @relation("ProjectLinkAddedBy")
   upworkAccounts    UpworkAccount[]
+  invitations       Invitation[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -104,9 +107,10 @@ model Organization {
   description String?
   isActive    Boolean @default(true) @map("is_active")
 
-  members  UserOrganization[]
-  niches   Niche[]
-  projects Project[]
+  members     UserOrganization[]
+  niches      Niche[]
+  projects    Project[]
+  invitations Invitation[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -127,6 +131,29 @@ model UserOrganization {
   @@index([userId], map: "idx_user_organizations_user")
   @@index([organizationId], map: "idx_user_organizations_org")
   @@map("user_organizations")
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  email          String
+  token          String       @unique
+  roleId         String       @map("role_id")
+  role           Role         @relation(fields: [roleId], references: [id])
+  teamId         String?      @map("team_id")
+  team           Team?        @relation(fields: [teamId], references: [id])
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  invitedById    String?      @map("invited_by_id")
+  invitedBy      User?        @relation(fields: [invitedById], references: [id])
+  expiresAt      DateTime     @map("expires_at")
+  acceptedAt     DateTime?    @map("accepted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([email], map: "idx_invitations_email")
+  @@index([organizationId], map: "idx_invitations_org")
+  @@map("invitations")
 }
 
 // -------------------------------------------------------
@@ -158,9 +185,7 @@ model Niche {
 
 enum ProjectStage {
   DISCOVERED
-  SCRIPTED
   SCRIPT_REVIEW
-  VIDEO_DRAFT
   UNDER_REVIEW
   ASSIGNED
   BID_SUBMITTED
@@ -255,6 +280,10 @@ model Project {
   startDate        DateTime? @map("start_date")
   endDate          DateTime? @map("end_date")
 
+  // Financial overrides
+  hoursBilledOverride    Float? @map("hours_billed_override")
+  currentEarningsOverride Float? @map("current_earnings_override")
+
   milestones            Milestone[]
   tasks                 Task[]
   meetings              Meeting[]
@@ -287,6 +316,7 @@ model Milestone {
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   name      String
+  description String?
   dueDate   DateTime? @map("due_date")
   amount    Float?
   completed Boolean   @default(false)
@@ -388,7 +418,6 @@ model Task {
   description    String?
   status         TaskStatus @default(TODO)
   priority       Int        @default(0)
-  isUrgent       Boolean    @default(false) @map("is_urgent")
   estimatedHours Float?     @map("estimated_hours")
   completedAt    DateTime?  @map("completed_at")
 
