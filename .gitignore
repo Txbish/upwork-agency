@@ -15,3 +15,4 @@ notes/
 # Extension build artifacts
 extension/dist/
 extension/node_modules/
+extension/assets/
