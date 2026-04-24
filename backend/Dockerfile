@@ -31,4 +31,4 @@ COPY --from=build /app/package.json ./
 ENV NODE_ENV=production
 
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/main"]  
