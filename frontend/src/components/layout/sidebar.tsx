@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuthContext } from '@/components/auth-provider';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
+import { Logo } from '@/components/brand/logo';
 
 interface NavItem {
   label: string;
@@ -92,47 +93,48 @@ export function Sidebar() {
   const visibleItems = navItems.filter((item) => item.roles.includes(userRole));
 
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r glass">
-      {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-border/40 px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-amber text-white font-bold text-sm shadow-glow-sm">
-          A
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold tracking-tight text-foreground">AOP</span>
-          <span className="text-[10px] text-muted-foreground tracking-widest uppercase">
-            Platform
-          </span>
-        </div>
+    <aside className="hidden lg:flex lg:flex-col lg:w-[260px] lg:border-r lg:border-mist bg-cream">
+      {/* Wordmark */}
+      <div className="flex h-16 items-center gap-2 px-6">
+        <Logo size={46} />
+        <span className="text-[24px] font-medium tracking-[-0.02em] leading-none text-ink">
+          aop.
+        </span>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-        {visibleItems.map((item) => {
-          const isActive =
-            pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
-                isActive
-                  ? 'bg-gradient-to-r from-primary/15 to-amber/8 text-primary border border-primary/25 shadow-sm shadow-primary/5'
-                  : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground',
-              )}
-            >
-              <item.icon
-                className={cn(
-                  'h-4 w-4 shrink-0 transition-colors',
-                  isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground',
-                )}
-              />
-              {item.label}
-              {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto px-4 pt-4 pb-2">
+        <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-storm/55">
+          Workspace
+        </p>
+        <ul className="space-y-0.5">
+          {visibleItems.map((item) => {
+            const isActive =
+              pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'group flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium transition-colors duration-200',
+                    isActive
+                      ? 'bg-ink text-cream'
+                      : 'text-storm/85 hover:bg-ink/[0.06] hover:text-ink',
+                  )}
+                >
+                  <item.icon
+                    className={cn(
+                      'h-4 w-4 shrink-0 transition-colors',
+                      isActive ? 'text-cream' : 'text-storm/65 group-hover:text-ink',
+                    )}
+                    strokeWidth={1.75}
+                  />
+                  <span className="tracking-[-0.006em]">{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
       <OrgSwitcher />

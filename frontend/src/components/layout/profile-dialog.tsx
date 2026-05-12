@@ -134,8 +134,13 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Email</Label>
-              <Input value={fullUser?.email ?? ''} disabled className="text-muted-foreground" />
+              <Label htmlFor="profile-email">Email</Label>
+              <Input
+                id="profile-email"
+                value={fullUser?.email ?? ''}
+                disabled
+                className="text-storm/70"
+              />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -204,7 +209,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
                 {upworkAccounts.map((acc) => (
                   <div
                     key={acc.id}
-                    className="flex items-center justify-between rounded-md border px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-mist bg-parchment px-3 py-2.5"
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{acc.accountName}</span>
@@ -242,18 +247,32 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
             )}
 
             {/* Add new account */}
-            <div className="space-y-2 rounded-md border p-3">
-              <Label className="text-xs font-semibold">Link New Account</Label>
-              <Input
-                placeholder="Account name (e.g. AOP_Main)"
-                value={newAccountName}
-                onChange={(e) => setNewAccountName(e.target.value)}
-              />
-              <Input
-                placeholder="Profile URL (optional)"
-                value={newAccountUrl}
-                onChange={(e) => setNewAccountUrl(e.target.value)}
-              />
+            <fieldset className="space-y-3 rounded-lg border border-mist bg-parchment p-4">
+              <legend className="px-1 text-[12px] font-medium uppercase tracking-[0.08em] text-storm/70">
+                Link new account
+              </legend>
+              <div className="space-y-1.5">
+                <Label htmlFor="new-upwork-name" className="sr-only">
+                  Account name
+                </Label>
+                <Input
+                  id="new-upwork-name"
+                  placeholder="Account name (e.g. AOP_Main)"
+                  value={newAccountName}
+                  onChange={(e) => setNewAccountName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="new-upwork-url" className="sr-only">
+                  Profile URL
+                </Label>
+                <Input
+                  id="new-upwork-url"
+                  placeholder="Profile URL (optional)"
+                  value={newAccountUrl}
+                  onChange={(e) => setNewAccountUrl(e.target.value)}
+                />
+              </div>
               <Button
                 size="sm"
                 disabled={!newAccountName || createUpworkAccount.isPending}
@@ -274,7 +293,7 @@ export function ProfileDialog({ open, onOpenChange }: ProfileDialogProps) {
               >
                 {createUpworkAccount.isPending ? 'Linking...' : 'Link Account'}
               </Button>
-            </div>
+            </fieldset>
           </TabsContent>
         </Tabs>
       </DialogContent>

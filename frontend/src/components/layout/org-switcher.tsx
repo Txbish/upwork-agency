@@ -2,7 +2,7 @@
 
 import { useMyOrganizations } from '@/hooks/use-organizations';
 import { useAuthContext } from '@/components/auth-provider';
-import { Building2, ChevronDown } from 'lucide-react';
+import { Building2, ChevronDown, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,32 +21,31 @@ export function OrgSwitcher() {
   const activeName = activeOrg?.organization?.name ?? 'Select Organization';
 
   return (
-    <div className="px-3 py-3 border-t border-border/50">
-      <p className="mb-1.5 px-1 text-[10px] font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-        <Building2 className="h-3 w-3" />
+    <div className="border-t border-mist px-4 py-4">
+      <p className="mb-2 px-1 text-[10px] font-medium uppercase tracking-[0.16em] text-storm/55 flex items-center gap-1.5">
+        <Building2 className="h-3 w-3" strokeWidth={1.75} />
         Organization
       </p>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             className={cn(
-              'w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium',
-              'bg-accent/40 hover:bg-accent/70 border border-border/50 hover:border-primary/30',
-              'transition-all duration-150 text-left',
+              'w-full flex items-center justify-between rounded-lg px-3 py-2.5 text-left',
+              'border border-mist bg-cream text-[14px] font-medium text-ink',
+              'transition-colors duration-200 hover:bg-ink/[0.04]',
             )}
           >
-            <span className="truncate text-foreground text-sm">{activeName}</span>
+            <span className="truncate tracking-[-0.006em]">{activeName}</span>
             {myOrgs.length > 1 && (
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 ml-1" />
+              <ChevronDown
+                className="h-4 w-4 text-storm/60 flex-shrink-0 ml-2"
+                strokeWidth={1.75}
+              />
             )}
           </button>
         </DropdownMenuTrigger>
         {myOrgs.length > 1 && (
-          <DropdownMenuContent
-            className="w-56 bg-card/90 backdrop-blur-xl border-border/60"
-            side="top"
-            align="start"
-          >
+          <DropdownMenuContent className="w-[228px]" side="top" align="start">
             {myOrgs.map((membership) => {
               const isActive = membership.organizationId === activeOrganizationId;
               return (
@@ -58,14 +57,13 @@ export function OrgSwitcher() {
                       membership.organization?.name ?? membership.organizationId.slice(0, 8),
                     )
                   }
-                  className={cn(
-                    'cursor-pointer',
-                    isActive && 'text-primary font-medium bg-primary/5',
-                  )}
+                  className="cursor-pointer"
                 >
-                  <Building2 className="mr-2 h-3.5 w-3.5" />
-                  {membership.organization?.name ?? membership.organizationId.slice(0, 8)}
-                  {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary" />}
+                  <Building2 className="mr-2 h-4 w-4" strokeWidth={1.75} />
+                  <span className="truncate">
+                    {membership.organization?.name ?? membership.organizationId.slice(0, 8)}
+                  </span>
+                  {isActive && <Check className="ml-auto h-4 w-4" strokeWidth={1.75} />}
                 </DropdownMenuItem>
               );
             })}

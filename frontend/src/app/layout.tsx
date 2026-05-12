@@ -1,23 +1,17 @@
 import type { Metadata } from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Providers } from './providers';
 import { AuthGuard } from '@/components/auth-guard';
 
 export const metadata: Metadata = {
-  title: 'AOP Platform',
-  description: 'Agency Operations Platform',
+  title: 'AOP · Agency Operations',
+  description: 'High-contrast operations platform for an Upwork agency.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
-      suppressHydrationWarning
-    >
-      <body className={`${GeistSans.className} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-cream text-ink antialiased">
         <Providers>
           <AuthGuard>{children}</AuthGuard>
         </Providers>

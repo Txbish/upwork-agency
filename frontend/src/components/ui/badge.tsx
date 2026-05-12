@@ -3,17 +3,25 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  'inline-flex items-center rounded-badge px-3 py-1 text-[13px] font-medium leading-none tracking-[0.01em] transition-colors',
   {
     variants: {
       variant: {
-        default:
-          'border-transparent bg-gradient-to-r from-primary/90 to-amber text-primary-foreground',
-        secondary: 'border-transparent bg-secondary text-secondary-foreground',
-        destructive: 'bg-destructive/15 text-destructive border-destructive/25',
-        outline: 'text-foreground border-border/70',
-        success: 'bg-success/15 text-success border-success/25',
-        warning: 'bg-warning/15 text-warning border-warning/25',
+        // Translucent cream chip — the canonical (dot)connect status badge
+        default: 'bg-cream/80 text-storm border border-mist/60',
+        // Filled ink — sharp, used for primary-state callouts
+        solid: 'bg-ink text-cream',
+        // Outline — empty chip
+        outline: 'bg-transparent text-ink border border-ink/30',
+        // Parchment — neutral quiet chip (alias of legacy "secondary")
+        secondary: 'bg-parchment text-storm border border-mist/60',
+        // Operational state colors
+        success: 'bg-cream/80 text-[hsl(var(--success))] border border-[hsl(var(--success))]/35',
+        warning: 'bg-cream/80 text-ink border border-orange/60',
+        destructive: 'bg-cream/80 text-[hsl(var(--destructive))] border border-[hsl(var(--destructive))]/40',
+        info: 'bg-cream/80 text-blue border border-blue/35',
+        // Orange wash — singular emphasis. Rare.
+        wash: 'bg-orange text-ink',
       },
     },
     defaultVariants: {

@@ -1,7 +1,6 @@
 'use client';
 
-import { Menu, Bell, LogOut, User as UserIcon, Sun, Moon } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { Menu, Bell, LogOut, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,11 +16,13 @@ import { useAuthContext } from '@/components/auth-provider';
 import { MobileNav } from './mobile-nav';
 import { useState } from 'react';
 import { ProfileDialog } from '@/components/layout/profile-dialog';
+import { usePathname } from 'next/navigation';
+import { navItems } from '@/components/layout/sidebar';
 
 export function TopBar() {
   const { user, fullUser, logout } = useAuthContext();
-  const { theme, setTheme } = useTheme();
   const [profileOpen, setProfileOpen] = useState(false);
+  const pathname = usePathname();
 
   const initials = fullUser
     ? `${fullUser.firstName?.[0] ?? ''}${fullUser.lastName?.[0] ?? ''}`.toUpperCase() || 'U'
@@ -33,9 +34,14 @@ export function TopBar() {
 
   const roleName = fullUser?.role?.name ?? user?.role ?? '';
 
+  const currentNav = navItems.find(
+    (i) => i.href === pathname || (i.href !== '/' && pathname.startsWith(i.href)),
+  );
+  const pageLabel = currentNav?.label ?? 'Dashboard';
+
   return (
     <>
-      <header className="flex h-16 items-center gap-3 border-b glass px-4 lg:px-6">
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-mist bg-cream/95 backdrop-blur-sm px-4 lg:px-8">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="lg:hidden">
@@ -43,71 +49,66 @@ export function TopBar() {
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
+          <SheetContent side="left" className="w-72 p-0">
             <SheetTitle className="sr-only">Navigation</SheetTitle>
             <MobileNav />
           </SheetContent>
         </Sheet>
 
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-storm/55">
+            Page
+          </span>
+          <span className="h-3 w-px bg-mist" aria-hidden />
+          <h1 className="text-[18px] font-medium leading-none tracking-[-0.012em] text-ink">
+            {pageLabel}
+          </h1>
+        </div>
+
         <div className="flex-1" />
 
-        {/* Notification bell */}
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-muted-foreground hover:text-foreground"
+          className="relative text-storm/70 hover:text-ink rounded-full"
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-4 w-4" strokeWidth={1.75} />
           <span className="sr-only">Notifications</span>
         </Button>
 
-        {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          aria-label="Toggle theme"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </Button>
-
-        {/* User menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              className="relative h-9 w-9 rounded-full p-0 ring-2 ring-border/60 hover:ring-primary/50 transition-all duration-200"
+            <button
+              type="button"
+              className="relative h-10 w-10 rounded-full border border-mist transition-colors hover:border-ink/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue/40"
             >
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-gradient-to-br from-primary/25 to-amber/20 text-primary text-xs font-semibold">
+              <Avatar className="h-full w-full border-0">
+                <AvatarFallback className="bg-ink text-cream text-[12px] font-medium">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-            </Button>
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 glass" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{displayName}</p>
-                <p className="text-xs leading-none text-muted-foreground capitalize">{roleName}</p>
+          <DropdownMenuContent className="w-64" align="end" forceMount>
+            <DropdownMenuLabel>
+              <div className="flex flex-col gap-1 normal-case tracking-normal">
+                <p className="text-[14px] font-medium leading-tight text-ink">{displayName}</p>
+                <p className="text-[12px] leading-tight text-storm/70 capitalize">
+                  {roleName}
+                </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-border/40" />
-            <DropdownMenuItem
-              onClick={() => setProfileOpen(true)}
-              className="cursor-pointer hover:bg-accent/80"
-            >
-              <UserIcon className="mr-2 h-4 w-4" />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setProfileOpen(true)} className="cursor-pointer">
+              <UserIcon className="mr-2 h-4 w-4" strokeWidth={1.75} />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-border/40" />
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => logout()}
-              className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive focus:text-destructive"
+              className="cursor-pointer text-[hsl(var(--destructive))] focus:bg-[hsl(var(--destructive))] focus:text-cream"
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className="mr-2 h-4 w-4" strokeWidth={1.75} />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

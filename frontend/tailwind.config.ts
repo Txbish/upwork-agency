@@ -2,15 +2,48 @@ import type { Config } from 'tailwindcss';
 import tailwindcssAnimate from 'tailwindcss-animate';
 
 const config: Config = {
-  darkMode: 'class',
   content: ['./src/app/**/*.{js,ts,jsx,tsx,mdx}', './src/components/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
+        sans: [
+          '"Aeonik Pro Regular"',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'sans-serif',
+        ],
+        display: ['"Aeonik Pro Regular"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+      },
+      fontSize: {
+        caption: ['16px', { lineHeight: '1.5', letterSpacing: '0.01em' }],
+        'body-sm': ['18px', { lineHeight: '1.4', letterSpacing: '0.01em' }],
+        body: ['21px', { lineHeight: '1.4', letterSpacing: '-0.012em' }],
+        subheading: ['24px', { lineHeight: '1.1', letterSpacing: '-0.012em' }],
+        'heading-sm': ['32px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
+        heading: ['36px', { lineHeight: '1.1', letterSpacing: '-0.02em' }],
+        'heading-lg': ['72px', { lineHeight: '0.9', letterSpacing: '-0.025em' }],
+        display: ['101px', { lineHeight: '0.8', letterSpacing: '-0.025em' }],
       },
       colors: {
+        // Brand tokens (canonical names from the (dot)connect spec)
+        ink: 'hsl(var(--ink))',
+        storm: 'hsl(var(--storm))',
+        blue: {
+          DEFAULT: 'hsl(var(--blue))',
+        },
+        orange: {
+          DEFAULT: 'hsl(var(--orange))',
+        },
+        cream: 'hsl(var(--cream))',
+        parchment: 'hsl(var(--parchment))',
+        mist: 'hsl(var(--mist))',
+
+        // Shadcn-compatible semantic aliases
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -52,25 +85,25 @@ const config: Config = {
           DEFAULT: 'hsl(var(--warning))',
           foreground: 'hsl(var(--warning-foreground))',
         },
-        amber: {
-          DEFAULT: 'hsl(var(--amber))',
-        },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        sm: '6px',
+        md: '8px',
+        lg: '12px',
+        xl: '16px',
+        '2xl': '20px',
+        '3xl': '24px',
+        '4xl': '32px',
+        badge: '8px',
+        card: '20px',
+        btn: '9999px',
+        decorative: '48px',
       },
-      backgroundImage: {
-        'gradient-primary': 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--amber)))',
-        'gradient-subtle':
-          'linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--amber) / 0.06))',
-      },
-      boxShadow: {
-        'glow-sm': '0 0 12px hsl(var(--primary) / 0.15), 0 0 4px hsl(var(--primary) / 0.1)',
-        'glow-md': '0 0 20px hsl(var(--primary) / 0.2), 0 0 8px hsl(var(--primary) / 0.12)',
-        'glow-lg': '0 0 32px hsl(var(--primary) / 0.25), 0 0 12px hsl(var(--primary) / 0.15)',
-        'glow-amber': '0 0 16px hsl(var(--amber) / 0.15), 0 0 4px hsl(var(--amber) / 0.1)',
+      spacing: {
+        '1.5': '6px',
+        18: '72px',
+        22: '88px',
+        30: '120px',
       },
       keyframes: {
         'accordion-down': {
@@ -98,33 +131,22 @@ const config: Config = {
           to: { opacity: '1', transform: 'translateY(0)' },
         },
         'scale-in': {
-          from: { opacity: '0', transform: 'scale(0.96)' },
+          from: { opacity: '0', transform: 'scale(0.98)' },
           to: { opacity: '1', transform: 'scale(1)' },
-        },
-        shimmer: {
-          from: { backgroundPosition: '-200% 0' },
-          to: { backgroundPosition: '200% 0' },
-        },
-        'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 12px hsl(var(--primary) / 0.3)' },
-          '50%': { boxShadow: '0 0 28px hsl(var(--primary) / 0.55)' },
-        },
-        'glow-amber-slow': {
-          '0%, 100%': { boxShadow: '0 0 8px hsl(var(--amber) / 0.15)' },
-          '50%': { boxShadow: '0 0 20px hsl(var(--amber) / 0.35)' },
         },
       },
       animation: {
-        'accordion-down': 'accordion-down 0.2s ease-out',
-        'accordion-up': 'accordion-up 0.2s ease-out',
-        'fade-in': 'fade-in 0.25s ease-out',
-        'fade-out': 'fade-out 0.2s ease-in',
-        'slide-up': 'slide-up 0.3s ease-out',
-        'slide-down': 'slide-down 0.3s ease-out',
-        'scale-in': 'scale-in 0.2s ease-out',
-        shimmer: 'shimmer 2s linear infinite',
-        'pulse-glow': 'pulse-glow 2.5s ease-in-out infinite',
-        'glow-amber-slow': 'glow-amber-slow 3s ease-in-out infinite',
+        'accordion-down': 'accordion-down 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
+        'accordion-up': 'accordion-up 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
+        'fade-in': 'fade-in 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
+        'fade-out': 'fade-out 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
+        'slide-up': 'slide-up 0.24s cubic-bezier(0.22, 1, 0.36, 1)',
+        'slide-down': 'slide-down 0.24s cubic-bezier(0.22, 1, 0.36, 1)',
+        'scale-in': 'scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
+      },
+      transitionTimingFunction: {
+        'out-quart': 'cubic-bezier(0.22, 1, 0.36, 1)',
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },

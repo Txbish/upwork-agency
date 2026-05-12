@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { Logo } from '@/components/brand/logo';
 
 interface OrgSwitchOverlayProps {
   visible: boolean;
@@ -13,64 +14,53 @@ export function OrgSwitchOverlay({ visible, orgName }: OrgSwitchOverlayProps) {
       {visible && (
         <motion.div
           key="org-switch-overlay"
-          className="fixed inset-0 z-[200] flex flex-col items-center justify-center"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-cream/96"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.35, ease: 'easeInOut' }}
+          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Blurred backdrop */}
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-xl" />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-start gap-7 px-10"
+          >
+            <Logo size={56} />
 
-          {/* Gradient orbs for flair */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <motion.div
-              className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/20 blur-3xl"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.6, opacity: 0 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-            />
-            <motion.div
-              className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-amber/20 blur-3xl"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.6, opacity: 0 }}
-              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.05 }}
-            />
-          </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-storm/55">
+                switching workspace
+              </p>
+              <h2 className="text-[44px] font-medium leading-[1] tracking-[-0.025em] text-ink">
+                {orgName.toLowerCase()}
+                <span className="text-orange">.</span>
+              </h2>
+            </div>
 
-          {/* Content */}
-          <div className="relative flex flex-col items-center gap-4 text-center">
-            {/* Spinner ring */}
-            <motion.div
-              className="h-14 w-14 rounded-full border-2 border-border/30 border-t-primary"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.9, repeat: Infinity, ease: 'linear' }}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, delay: 0.15 }}
+            {/* Three-dot progress, sequential pulse */}
+            <div
+              className="flex items-center gap-2 mt-2"
+              role="status"
+              aria-label={`Switching to ${orgName}`}
             >
-              <p className="text-sm text-muted-foreground tracking-widest uppercase mb-1">
-                Switching to
-              </p>
-              <p
-                className="text-3xl font-bold"
-                style={{
-                  background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(var(--amber)))',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {orgName}
-              </p>
-            </motion.div>
-          </div>
+              {[0, 1, 2].map((i) => (
+                <motion.span
+                  key={i}
+                  className="block h-1.5 w-1.5 rounded-full bg-ink"
+                  initial={{ opacity: 0.2 }}
+                  animate={{ opacity: [0.2, 1, 0.2] }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    delay: i * 0.18,
+                    ease: 'easeInOut',
+                  }}
+                />
+              ))}
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

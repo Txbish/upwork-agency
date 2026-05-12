@@ -7,7 +7,6 @@ import { useAuthContext } from '@/components/auth-provider';
 import { ProjectStage, PricingType, TaskStatus } from '@/types';
 import type { Project } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -18,14 +17,12 @@ import {
 } from '@/components/ui/select';
 import {
   Search,
-  Briefcase,
   ListTodo,
   Calendar,
-  DollarSign,
   Clock,
-  Link2,
+  Flag,
   AlertTriangle,
-  ExternalLink,
+  ArrowUpRight,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -45,67 +42,33 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric',
   });
 }
 
 function getPricingLabel(project: Project): string {
   if (project.contractValue) {
-    return `Contract · ${formatCurrency(project.contractValue)}`;
+    return formatCurrency(project.contractValue);
   }
   if (project.pricingType === PricingType.FIXED && project.fixedPrice != null) {
-    return `Fixed · ${formatCurrency(project.fixedPrice)}`;
+    return formatCurrency(project.fixedPrice);
   }
   if (project.pricingType === PricingType.HOURLY) {
     const min = project.hourlyRateMin;
     const max = project.hourlyRateMax;
-    if (min != null && max != null) {
-      return `Hourly · $${min}-$${max}/hr`;
-    }
-    if (min != null) return `Hourly · $${min}/hr`;
-    if (max != null) return `Hourly · up to $${max}/hr`;
+    if (min != null && max != null) return `$${min}–$${max}/hr`;
+    if (min != null) return `$${min}/hr`;
+    if (max != null) return `up to $${max}/hr`;
     return 'Hourly';
   }
-  return project.pricingType ?? 'N/A';
+  return project.pricingType ?? '·';
 }
 
-const STAGE_BADGE: Record<string, { label: string; className: string }> = {
-  [ProjectStage.IN_PROGRESS]: {
-    label: 'In Progress',
-    className: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  },
-  [ProjectStage.COMPLETED]: {
-    label: 'Completed',
-    className: 'bg-green-500/15 text-green-400 border-green-500/30',
-  },
-};
-
-const TASK_STATUS_STYLES: Record<string, { label: string; dotClass: string; textClass: string }> = {
-  [TaskStatus.TODO]: {
-    label: 'Todo',
-    dotClass: 'bg-slate-400',
-    textClass: 'text-slate-400',
-  },
-  [TaskStatus.IN_PROGRESS]: {
-    label: 'In Progress',
-    dotClass: 'bg-blue-400',
-    textClass: 'text-blue-400',
-  },
-  [TaskStatus.IN_REVIEW]: {
-    label: 'In Review',
-    dotClass: 'bg-amber-400',
-    textClass: 'text-amber-400',
-  },
-  [TaskStatus.DONE]: {
-    label: 'Done',
-    dotClass: 'bg-emerald-400',
-    textClass: 'text-emerald-400',
-  },
-  [TaskStatus.BLOCKED]: {
-    label: 'Blocked',
-    dotClass: 'bg-red-400',
-    textClass: 'text-red-400',
-  },
+const TASK_STATUS_LABEL: Record<string, string> = {
+  [TaskStatus.TODO]: 'todo',
+  [TaskStatus.IN_PROGRESS]: 'doing',
+  [TaskStatus.IN_REVIEW]: 'review',
+  [TaskStatus.DONE]: 'done',
+  [TaskStatus.BLOCKED]: 'blocked',
 };
 
 const TASK_STATUS_ORDER = [
@@ -149,208 +112,179 @@ export default function ProjectsPage() {
     if (!data?.data) return [];
 
     return data.data.filter((p) => {
-      // Only delivery-phase projects
       if (p.stage !== ProjectStage.IN_PROGRESS && p.stage !== ProjectStage.COMPLETED) {
         return false;
       }
-
-      // Status filter
       if (statusFilter === 'in_progress' && p.stage !== ProjectStage.IN_PROGRESS) return false;
       if (statusFilter === 'completed' && p.stage !== ProjectStage.COMPLETED) return false;
-
-      // Search filter
       if (search.trim()) {
         const q = search.toLowerCase();
         if (!p.title.toLowerCase().includes(q)) return false;
       }
-
       return true;
     });
   }, [data, search, statusFilter]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col gap-4 overflow-hidden p-6">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <Briefcase className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="gradient-text text-2xl font-bold tracking-tight">Projects</h1>
-            <p className="text-sm text-muted-foreground">Active and completed delivery projects</p>
-          </div>
+    <div className="space-y-10">
+      {/* Header */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-storm/55">
+            delivery
+          </p>
+          <h1 className="mt-2 text-[44px] font-medium leading-[1] tracking-[-0.025em] text-ink">
+            projects.
+          </h1>
+          <p className="mt-3 max-w-xl text-[16px] leading-[1.5] text-storm/75">
+            Active and completed delivery projects. Open one to see its tasks, milestones, and
+            client conversation.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-storm/50"
+              strokeWidth={1.75}
+            />
             <Input
-              placeholder="Search projects..."
+              placeholder="Search projects"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-64 pl-9"
+              className="w-full sm:w-72 pl-10"
             />
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="all">All projects</SelectItem>
+              <SelectItem value="in_progress">In progress</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      {/* ── Grid ───────────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="animate-pulse rounded-xl border bg-muted/30 p-5 space-y-3">
-                <div className="h-5 w-3/4 rounded bg-muted" />
-                <div className="h-4 w-1/2 rounded bg-muted/60" />
-                <div className="h-4 w-2/3 rounded bg-muted/40" />
-              </div>
-            ))}
-          </div>
-        ) : filteredProjects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <AlertTriangle className="mb-3 h-10 w-10 text-muted-foreground/50" />
-            <p className="text-lg font-medium text-muted-foreground">No projects found</p>
-            <p className="text-sm text-muted-foreground/70">
-              {search ? 'Try adjusting your search or filter' : 'No delivery-phase projects yet'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => {
-              const badge = STAGE_BADGE[project.stage];
-              const meetingCount = project._count?.meetings ?? 0;
-              const milestoneCount = project._count?.milestones ?? 0;
-              const statusCounts = project.taskStatusCounts ?? {};
-              const urgentCount = project.urgentTaskCount ?? 0;
+      {/* Grid */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-card border border-mist bg-parchment p-6 space-y-3">
+              <div className="h-5 w-3/4 rounded bg-ink/10 animate-pulse" />
+              <div className="h-4 w-1/2 rounded bg-ink/10 animate-pulse" />
+              <div className="h-4 w-2/3 rounded bg-ink/10 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="rounded-card border border-mist bg-parchment py-20 text-center">
+          <AlertTriangle className="mx-auto mb-3 h-10 w-10 text-storm/40" strokeWidth={1.75} />
+          <p className="text-[18px] font-medium text-ink">No projects found</p>
+          <p className="mt-1 text-[14px] text-storm/65">
+            {search ? 'Try adjusting your search or filter.' : 'No delivery-phase projects yet.'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProjects.map((project) => {
+            const isCompleted = project.stage === ProjectStage.COMPLETED;
+            const meetingCount = project._count?.meetings ?? 0;
+            const milestoneCount = project._count?.milestones ?? 0;
+            const statusCounts = project.taskStatusCounts ?? {};
+            const urgentCount = project.urgentTaskCount ?? 0;
+            const hasAnyTasks = Object.values(statusCounts).some((c) => c && c > 0);
 
-              return (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.id}`}
-                  onMouseEnter={() => prefetchProject(project.id)}
-                  className="group rounded-xl border bg-card p-5 space-y-3 transition-all hover:shadow-glow-sm hover:border-primary/30"
-                >
-                  {/* Title + Badge */}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold truncate text-sm leading-snug">{project.title}</h3>
-                    {badge && (
-                      <Badge
-                        variant="outline"
-                        className={`shrink-0 text-[10px] ${badge.className}`}
-                      >
-                        {badge.label}
-                      </Badge>
-                    )}
-                  </div>
+            return (
+              <Link
+                key={project.id}
+                href={`/projects/${project.id}`}
+                onMouseEnter={() => prefetchProject(project.id)}
+                className="group relative flex flex-col gap-4 rounded-card border border-mist bg-parchment p-6 transition-colors duration-200 hover:bg-cream"
+              >
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-[17px] font-medium leading-[1.2] tracking-[-0.012em] text-ink">
+                    {project.title}
+                  </h3>
+                  <Badge variant={isCompleted ? 'success' : 'info'}>
+                    {isCompleted ? 'Completed' : 'In progress'}
+                  </Badge>
+                </div>
 
-                  {/* Client */}
-                  <p className="text-xs text-muted-foreground">
+                {/* Client + price */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] tracking-[-0.006em] text-storm/75">
+                  <span className="font-medium text-storm">
                     {project.clientName || 'No client'}
-                  </p>
+                  </span>
+                  <span className="text-storm/40">·</span>
+                  <span className="tnum text-ink">{getPricingLabel(project)}</span>
+                </div>
 
-                  {/* Pricing */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                    <span>{getPricingLabel(project)}</span>
-                  </div>
-
-                  {/* Task status mini badges */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <ListTodo className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {TASK_STATUS_ORDER.map((status) => {
-                          const count = statusCounts[status];
-                          if (!count || count <= 0) return null;
-                          const style = TASK_STATUS_STYLES[status];
-                          return (
-                            <span
-                              key={status}
-                              className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${style.textClass} bg-muted/50`}
-                            >
-                              <span
-                                className={`inline-block h-1.5 w-1.5 rounded-full ${style.dotClass}`}
-                              />
-                              {count}
-                            </span>
-                          );
-                        })}
-                        {Object.values(statusCounts).every((c) => !c || c <= 0) && (
-                          <span className="text-[10px] text-muted-foreground/60">No tasks</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {urgentCount > 0 && (
-                      <div className="flex items-center gap-1.5 pl-5">
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] bg-red-500/15 text-red-400 border-red-500/30"
+                {/* Task strip */}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <ListTodo className="h-3.5 w-3.5 text-storm/60" strokeWidth={1.75} />
+                  {hasAnyTasks ? (
+                    TASK_STATUS_ORDER.map((status) => {
+                      const count = statusCounts[status];
+                      if (!count || count <= 0) return null;
+                      return (
+                        <span
+                          key={status}
+                          className="inline-flex items-center gap-1.5 text-[12px] tracking-[-0.006em] text-storm/75 tnum"
                         >
-                          {'\u{1F534}'} {urgentCount} urgent
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Meeting count */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5 shrink-0" />
-                    <span>
-                      {meetingCount} meeting{meetingCount !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-
-                  {/* Milestones */}
-                  {milestoneCount > 0 && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Link2 className="h-3.5 w-3.5 shrink-0" />
-                      <span>
-                        {milestoneCount} milestone{milestoneCount !== 1 ? 's' : ''}
-                      </span>
-                    </div>
+                          <span className="font-medium text-ink">{count}</span>
+                          {TASK_STATUS_LABEL[status]}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <span className="text-[12px] text-storm/55">No tasks</span>
                   )}
+                  {urgentCount > 0 && (
+                    <Badge variant="warning" className="ml-auto">
+                      {urgentCount} urgent
+                    </Badge>
+                  )}
+                </div>
 
-                  {/* Timeline */}
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    {project.endDate ? (
-                      <>
-                        <Calendar className="h-3.5 w-3.5 shrink-0" />
-                        <span>Ends {formatDate(project.endDate)}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="h-3.5 w-3.5 shrink-0" />
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] bg-amber-500/15 text-amber-400 border-amber-500/30"
-                        >
-                          Ongoing
-                        </Badge>
-                      </>
-                    )}
-                  </div>
+                {/* Meta */}
+                <div className="mt-auto flex items-center justify-between gap-3 text-[12px] tracking-[-0.006em] text-storm/65 pt-1 border-t border-mist/70">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    {meetingCount} meeting{meetingCount === 1 ? '' : 's'}
+                  </span>
+                  {milestoneCount > 0 && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Flag className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      {milestoneCount}
+                    </span>
+                  )}
+                  {project.endDate ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      ends {formatDate(project.endDate)}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" strokeWidth={1.75} />
+                      ongoing
+                    </span>
+                  )}
+                </div>
 
-                  {/* Open link indicator */}
-                  <div className="flex justify-end pt-1">
-                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/40 transition-colors group-hover:text-primary" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                <ArrowUpRight
+                  className="absolute right-5 top-5 h-4 w-4 text-storm/40 transition-colors group-hover:text-ink opacity-0 group-hover:opacity-100"
+                  strokeWidth={1.75}
+                />
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -12,9 +12,11 @@ interface KanbanColumnProps {
   title: string;
   count: number;
   projects: Project[];
-  color: string;
+  color?: string;
   onCardClick: (project: Project) => void;
   index?: number;
+  /** Renders a thin vertical divider on the LEFT edge. Set false on the first column. */
+  showDivider?: boolean;
 }
 
 export function KanbanColumn({
@@ -22,9 +24,9 @@ export function KanbanColumn({
   title,
   count,
   projects,
-  color,
   onCardClick,
   index = 0,
+  showDivider = true,
 }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id,
@@ -33,36 +35,32 @@ export function KanbanColumn({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.06, ease: 'easeOut' }}
+      transition={{ duration: 0.22, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        'flex h-full min-w-[280px] max-w-[320px] flex-1 flex-col rounded-xl border border-border/60 bg-card/40 backdrop-blur-md transition-all duration-200',
-        isOver &&
-          'border-amber/40 bg-amber/5 shadow-[0_0_20px_hsl(var(--amber)/0.15)] ring-1 ring-amber/25',
+        'relative flex h-full min-w-[300px] max-w-[340px] flex-1 flex-col pl-6 pr-3',
+        showDivider && 'border-l border-mist',
       )}
     >
-      {/* Column Header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-border/60 px-3 py-2.5">
-        <div className={cn('h-2.5 w-2.5 rounded-full', color)} />
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <span
-          className={cn(
-            'ml-auto rounded-full px-2 py-0.5 text-xs font-medium transition-colors',
-            count > 0 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground',
-          )}
-        >
-          {count}
-        </span>
+      {/* Lane header */}
+      <div className="flex shrink-0 items-baseline justify-between pb-4 pt-1">
+        <h3 className="text-[11px] font-medium uppercase tracking-[0.16em] text-storm/65">
+          {title}
+        </h3>
+        <span className="text-[16px] font-medium leading-none text-ink tnum">{count}</span>
       </div>
 
-      {/* Cards Area */}
+      {/* Drop zone — no surface, just a tinted hover state */}
       <div
         ref={setNodeRef}
-        className="flex-1 overflow-x-hidden overflow-y-auto p-2 [scrollbar-width:thin] [scrollbar-color:hsl(var(--border)/0.6)_transparent]"
+        className={cn(
+          '-mx-2 flex-1 overflow-y-auto overflow-x-hidden rounded-lg px-2 pt-1 pb-4 transition-colors duration-200',
+          isOver && 'bg-blue/[0.06]',
+        )}
       >
         <SortableContext items={projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {projects.map((project, cardIndex) => (
               <ProjectCard
                 key={project.id}
@@ -72,8 +70,8 @@ export function KanbanColumn({
               />
             ))}
             {projects.length === 0 && (
-              <div className="flex h-20 items-center justify-center rounded-lg border border-dashed border-border/50 text-xs text-muted-foreground/60">
-                No projects
+              <div className="mt-2 rounded-2xl border border-dashed border-mist/80 px-3 py-8 text-center text-[12px] text-storm/45">
+                Empty
               </div>
             )}
           </div>

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useAuthContext } from '@/components/auth-provider';
 import { OrgSwitcher } from '@/components/layout/org-switcher';
 import { navItems } from '@/components/layout/sidebar';
+import { Logo } from '@/components/brand/logo';
 
 export function MobileNav() {
   const pathname = usePathname();
@@ -15,14 +16,15 @@ export function MobileNav() {
   const visibleItems = navItems.filter((item) => item.roles.includes(userRole));
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex h-16 items-center gap-2 border-b px-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-          A
-        </div>
-        <span className="text-lg font-semibold text-foreground">AOP</span>
+    <div className="flex flex-col h-full bg-cream">
+      <div className="flex h-16 items-center gap-3 border-b border-mist px-6">
+        <Logo size={40} />
+        <span className="text-[16px] font-medium text-ink tracking-tight">aop.</span>
       </div>
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-0.5">
+        <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.16em] text-storm/55">
+          Workspace
+        </p>
         {visibleItems.map((item) => {
           const isActive =
             pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -31,13 +33,13 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors',
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                  ? 'bg-ink text-cream'
+                  : 'text-storm/85 hover:bg-ink/[0.06] hover:text-ink',
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-4 w-4" strokeWidth={1.75} />
               {item.label}
             </Link>
           );

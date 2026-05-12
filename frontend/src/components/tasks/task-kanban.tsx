@@ -18,89 +18,80 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Info } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useUpdateTask } from '@/hooks/use-tasks';
 import { TaskStatus } from '@/types';
-import type { Task } from '@/types';
+import type { Task, PaginatedResponse } from '@/types';
 import TaskKanbanCard from './task-kanban-card';
+import { cn } from '@/lib/utils';
 
-const KANBAN_COLUMNS = [
-  { id: TaskStatus.TODO, title: 'To Do', color: 'bg-slate-400' },
-  { id: TaskStatus.IN_PROGRESS, title: 'In Progress', color: 'bg-blue-400' },
-  { id: TaskStatus.IN_REVIEW, title: 'In Review', color: 'bg-amber-400' },
-  { id: TaskStatus.DONE, title: 'Done', color: 'bg-emerald-400' },
-  { id: TaskStatus.BLOCKED, title: 'Blocked', color: 'bg-red-400' },
+const KANBAN_COLUMNS: { id: TaskStatus; title: string }[] = [
+  { id: TaskStatus.TODO, title: 'To do' },
+  { id: TaskStatus.IN_PROGRESS, title: 'In progress' },
+  { id: TaskStatus.IN_REVIEW, title: 'In review' },
+  { id: TaskStatus.DONE, title: 'Done' },
+  { id: TaskStatus.BLOCKED, title: 'Blocked' },
 ];
 
-const FINALISED_COLUMN = {
+const FINALISED_COLUMN: { id: TaskStatus; title: string } = {
   id: TaskStatus.FINALISED,
   title: 'Finalised',
-  color: 'bg-purple-400',
 };
-
-const COLUMN_BG: Record<string, string> = {
-  [TaskStatus.TODO]: 'bg-slate-400/5',
-  [TaskStatus.IN_PROGRESS]: 'bg-blue-400/5',
-  [TaskStatus.IN_REVIEW]: 'bg-amber-400/5',
-  [TaskStatus.DONE]: 'bg-emerald-400/5',
-  [TaskStatus.BLOCKED]: 'bg-red-400/5',
-  [TaskStatus.FINALISED]: 'bg-purple-400/5',
-};
-
-// ─── Droppable Column ────────────────────────────────────────────────────────
 
 interface KanbanColumnProps {
-  column: { id: TaskStatus; title: string; color: string };
+  column: { id: TaskStatus; title: string };
   tasks: Task[];
   showProject?: boolean;
   showDropPlaceholder?: boolean;
 }
 
-function KanbanColumn({ column, tasks, showProject, showDropPlaceholder }: KanbanColumnProps) {
+function KanbanColumn({
+  column,
+  tasks,
+  showProject,
+  showDropPlaceholder,
+  showDivider = true,
+}: KanbanColumnProps & { showDivider?: boolean }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
-
   const taskIds = tasks.map((t) => t.id);
 
   return (
-    <div className="flex min-w-[280px] w-[280px] shrink-0 flex-col">
-      {/* Column header */}
-      <div className="mb-2 flex items-center gap-2 px-1">
-        <span className={`h-2.5 w-2.5 rounded-full ${column.color}`} />
-        <span className="text-sm font-semibold">{column.title}</span>
-        <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px]">
-          {tasks.length}
-        </Badge>
+    <div
+      className={cn(
+        'flex min-w-[300px] w-[300px] shrink-0 flex-col pl-6 pr-3',
+        showDivider && 'border-l border-mist',
+      )}
+    >
+      {/* Lane header */}
+      <div className="flex shrink-0 items-baseline justify-between pb-4 pt-1">
+        <h3 className="text-[11px] font-medium uppercase tracking-[0.16em] text-storm/65">
+          {column.title}
+        </h3>
+        <span className="text-[16px] font-medium leading-none text-ink tnum">{tasks.length}</span>
       </div>
 
-      {/* Droppable zone */}
+      {/* Drop zone — surface-less */}
       <div
         ref={setNodeRef}
-        className={`
-          flex-1 rounded-lg border border-border/40 p-2
-          max-h-[calc(100vh-16rem)] overflow-y-auto
-          transition-colors duration-200
-          ${COLUMN_BG[column.id] ?? 'bg-muted/30'}
-          ${isOver ? 'ring-2 ring-primary/30 bg-primary/5' : ''}
-        `}
+        className={cn(
+          '-mx-2 flex-1 overflow-y-auto overflow-x-hidden rounded-lg px-2 pt-1 pb-4 max-h-[calc(100vh-19rem)] transition-colors duration-200 ease-out',
+          isOver && 'bg-blue/[0.08]',
+        )}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-2">
-            {showDropPlaceholder && (
-              <div className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
-                <div className="space-y-2">
-                  <Skeleton className="h-3.5 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              </div>
-            )}
+          <div className="flex flex-col gap-3">
             {tasks.map((task, i) => (
               <TaskKanbanCard key={task.id} task={task} index={i} showProject={showProject} />
             ))}
-            {tasks.length === 0 && (
-              <p className="py-8 text-center text-xs text-muted-foreground/60">No tasks</p>
+            {showDropPlaceholder && (
+              <div className="h-[112px] rounded-2xl border-2 border-dashed border-blue/45 bg-blue/[0.06]" />
+            )}
+            {tasks.length === 0 && !showDropPlaceholder && (
+              <div className="mt-2 rounded-2xl border border-dashed border-mist/80 px-3 py-8 text-center text-[12px] text-storm/45">
+                Empty
+              </div>
             )}
           </div>
         </SortableContext>
@@ -108,8 +99,6 @@ function KanbanColumn({ column, tasks, showProject, showDropPlaceholder }: Kanba
     </div>
   );
 }
-
-// ─── Kanban Board ────────────────────────────────────────────────────────────
 
 interface TaskKanbanProps {
   tasks: Task[];
@@ -121,8 +110,35 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [overColumnId, setOverColumnId] = useState<TaskStatus | null>(null);
   const updateTask = useUpdateTask();
+  const qc = useQueryClient();
 
-  const showProject = !projectId; // show project name when viewing all tasks
+  // Synchronously patch every cached "tasks" query so the card lands in the new
+  // column on the next render, before the network round-trip. The hook's onMutate
+  // also patches, but it awaits cancelQueries first → a 1-2 frame flash where the
+  // card snaps back to the old column.
+  function applyOptimisticStatus(taskId: string, status: TaskStatus) {
+    qc.setQueriesData({ queryKey: ['tasks'] }, (old: unknown) => {
+      if (!old) return old;
+      if (Array.isArray(old)) {
+        return (old as Task[]).map((t) => (t.id === taskId ? { ...t, status } : t));
+      }
+      if (typeof old === 'object' && 'data' in (old as object)) {
+        const paginated = old as PaginatedResponse<Task>;
+        if (Array.isArray(paginated.data)) {
+          return {
+            ...paginated,
+            data: paginated.data.map((t) => (t.id === taskId ? { ...t, status } : t)),
+          };
+        }
+      }
+      if (typeof old === 'object' && 'id' in (old as object) && (old as Task).id === taskId) {
+        return { ...(old as Task), status };
+      }
+      return old;
+    });
+  }
+
+  const showProject = !projectId;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -172,35 +188,33 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
     const draggedTask = active.data.current?.task as Task | undefined;
     if (!draggedTask) return;
 
-    // Determine target status — over.id could be a column id or another task id
     const newStatus = resolveColumnId(over.id);
-
     if (!newStatus || newStatus === draggedTask.status) return;
 
+    // Move the card in the cache immediately; mutate handles persistence + rollback on error.
+    applyOptimisticStatus(draggedTask.id, newStatus);
     updateTask.mutate({ id: draggedTask.id, status: newStatus });
   }
 
   return (
-    <div className="space-y-3">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Info className="h-3.5 w-3.5" />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-2 text-[12px] text-storm/65">
+          <Info className="h-3.5 w-3.5" strokeWidth={1.75} />
           <span>DONE = dev complete. FINALISED = billed and shared with client.</span>
         </div>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => setShowFinalised((v) => !v)}
           className="shrink-0 gap-1.5"
         >
-          {showFinalised ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          {showFinalised ? 'Hide Finalised' : 'Show Finalised'}
+          {showFinalised ? <EyeOff className="h-3.5 w-3.5" strokeWidth={1.75} /> : <Eye className="h-3.5 w-3.5" strokeWidth={1.75} />}
+          {showFinalised ? 'Hide finalised' : 'Show finalised'}
         </Button>
       </div>
 
-      {/* Board */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -210,18 +224,19 @@ export default function TaskKanban({ tasks, projectId }: TaskKanbanProps) {
         onDragCancel={handleDragCancel}
       >
         <motion.div
-          className="flex gap-4 overflow-x-auto pb-4"
+          className="flex overflow-x-auto pb-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         >
-          {columns.map((col) => (
+          {columns.map((col, idx) => (
             <KanbanColumn
               key={col.id}
               column={col}
               tasks={tasksByStatus[col.id] ?? []}
               showProject={showProject}
               showDropPlaceholder={!!activeTask && overColumnId === col.id}
+              showDivider={idx > 0}
             />
           ))}
         </motion.div>

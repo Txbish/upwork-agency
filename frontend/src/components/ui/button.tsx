@@ -4,25 +4,34 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97]',
+  'inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors duration-200 ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-cream disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default:
-          'bg-gradient-to-r from-primary to-amber text-primary-foreground shadow-sm hover:shadow-glow-sm hover:brightness-110',
-        destructive:
-          'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md',
+        // Filled ink — primary action
+        default: 'rounded-btn bg-ink text-cream hover:bg-storm',
+        // Outlined blue — secondary / links to internal flows
         outline:
-          'border border-input bg-background/60 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground hover:border-primary/40',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/70 hover:shadow-sm',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'rounded-btn border border-blue bg-transparent text-blue hover:bg-blue/[0.08]',
+        // Ghost — quiet text action, no fill at rest
+        ghost: 'rounded-btn text-ink hover:bg-ink/[0.06]',
+        // Secondary — parchment fill
+        secondary:
+          'rounded-btn bg-parchment text-ink border border-mist/60 hover:bg-mist/40',
+        // Destructive — rare; deep red, ink text
+        destructive:
+          'rounded-btn bg-destructive text-cream hover:bg-destructive/90',
+        // Link — pure text
+        link: 'text-blue underline-offset-4 hover:underline',
+        // Wash orange — singular brand accent
+        wash: 'rounded-btn bg-orange text-ink hover:bg-orange/90',
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-8 rounded-lg px-3 text-xs',
-        lg: 'h-11 rounded-lg px-8',
-        icon: 'h-10 w-10',
+        default: 'h-11 px-6 text-[15px]',
+        sm: 'h-9 px-4 text-[14px]',
+        lg: 'h-12 px-7 text-[16px]',
+        xs: 'h-8 px-3 text-[13px]',
+        icon: 'h-10 w-10 rounded-btn',
       },
     },
     defaultVariants: {

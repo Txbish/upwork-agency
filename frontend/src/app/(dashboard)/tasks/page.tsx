@@ -26,7 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, ListChecks } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { ProjectStage } from '@/types';
 
 const ALL_PROJECTS_VALUE = '__all__';
@@ -47,7 +47,6 @@ export default function TasksPage() {
   const [taskPriority, setTaskPriority] = useState('3');
   const [taskUrgent, setTaskUrgent] = useState(false);
 
-  // Fetch delivery-phase projects for the project filter
   const { data: projectsData } = useProjects({
     limit: 200,
     organizationId: activeOrganizationId ?? undefined,
@@ -55,7 +54,6 @@ export default function TasksPage() {
   const deliveryProjects =
     projectsData?.data?.filter((p) => DELIVERY_STAGES.includes(p.stage)) ?? [];
 
-  // Build task query params based on role
   const taskParams: { assigneeId?: string; projectId?: string } = {};
   if (isDeveloper && user?.id) {
     taskParams.assigneeId = user.id;
@@ -68,60 +66,62 @@ export default function TasksPage() {
   const createTask = useCreateTask();
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col gap-4 overflow-hidden p-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <ListChecks className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="gradient-text text-2xl font-bold tracking-tight">Tasks</h1>
-            <p className="text-sm text-muted-foreground">Kanban board for project tasks</p>
-          </div>
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-storm/55">
+            execution
+          </p>
+          <h1 className="mt-2 text-[44px] font-medium leading-[1] tracking-[-0.025em] text-ink">
+            tasks.
+          </h1>
+          <p className="mt-3 max-w-xl text-[16px] leading-[1.5] text-storm/75">
+            Kanban board of project tasks. Drag to reorder, click to open.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Project filter (optional) */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-            <SelectTrigger className="w-72">
-              <SelectValue placeholder="All Projects" />
+            <SelectTrigger className="w-full sm:w-72">
+              <SelectValue placeholder="All projects" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_PROJECTS_VALUE}>All Projects</SelectItem>
+              <SelectItem value={ALL_PROJECTS_VALUE}>All projects</SelectItem>
               {deliveryProjects.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.title}
                 </SelectItem>
               ))}
               {deliveryProjects.length === 0 && (
-                <div className="px-3 py-2 text-xs text-muted-foreground">
-                  No delivery-phase projects found
+                <div className="px-3 py-2 text-[12px] text-storm/55">
+                  No delivery-phase projects
                 </div>
               )}
             </SelectContent>
           </Select>
 
-          {/* Create task */}
           {canCreate && (
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add Task
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" strokeWidth={1.75} />
+                  Add task
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Task</DialogTitle>
+                  <DialogTitle>Create task</DialogTitle>
                   <DialogDescription>Add a new task to a project.</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-3 py-2">
-                  <div className="space-y-1.5">
-                    <Label>
-                      Project <span className="text-destructive">*</span>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-task-project">
+                      Project <span className="text-[hsl(var(--destructive))]">*</span>
                     </Label>
                     <Select value={createProjectId} onValueChange={setCreateProjectId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a project..." />
+                      <SelectTrigger id="new-task-project">
+                        <SelectValue placeholder="Select a project" />
                       </SelectTrigger>
                       <SelectContent>
                         {deliveryProjects.map((p) => (
@@ -132,27 +132,30 @@ export default function TasksPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Title</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-task-title">Title</Label>
                     <Input
+                      id="new-task-title"
                       value={taskTitle}
                       onChange={(e) => setTaskTitle(e.target.value)}
                       placeholder="Task title"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Description</Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-task-description">Description</Label>
                     <Textarea
+                      id="new-task-description"
                       value={taskDescription}
                       onChange={(e) => setTaskDescription(e.target.value)}
                       placeholder="Optional description"
-                      rows={2}
+                      rows={3}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label>Priority (P1-P10)</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-task-priority">Priority (P1–P10)</Label>
                       <Input
+                        id="new-task-priority"
                         type="number"
                         min="1"
                         max="10"
@@ -161,15 +164,17 @@ export default function TasksPage() {
                         disabled={taskUrgent}
                       />
                     </div>
-                    <div className="flex items-end gap-2 pb-1">
-                      <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="flex items-end pb-1">
+                      <label className="flex items-center gap-2 cursor-pointer text-[14px]">
                         <input
                           type="checkbox"
                           checked={taskUrgent}
                           onChange={(e) => setTaskUrgent(e.target.checked)}
-                          className="rounded border-border"
+                          className="h-4 w-4 rounded border-mist accent-[hsl(var(--destructive))]"
                         />
-                        <span className="text-sm text-destructive font-medium">Urgent (P0)</span>
+                        <span className="font-medium text-[hsl(var(--destructive))]">
+                          Urgent (P0)
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -204,7 +209,7 @@ export default function TasksPage() {
                       );
                     }}
                   >
-                    {createTask.isPending ? 'Creating...' : 'Create Task'}
+                    {createTask.isPending ? 'Creating…' : 'Create task'}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -214,9 +219,9 @@ export default function TasksPage() {
       </div>
 
       {/* Kanban */}
-      <div className="flex-1 overflow-hidden">
+      <div className="min-h-[60vh]">
         {tasksLoading ? (
-          <div className="flex gap-4 h-full">
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="min-w-[280px] w-[280px] space-y-3">
                 <Skeleton className="h-8 w-full" />
